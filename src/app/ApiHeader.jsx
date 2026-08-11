@@ -1,5 +1,6 @@
 import React from 'react';
-import { Code2, Sun, Moon, RefreshCw } from 'lucide-react'; 
+import { Sun, Moon, RefreshCw } from 'lucide-react'; 
+import sapLogo from '../assets/sap-logo.png';
 
 export default function ApiHeader({ 
   theme, 
@@ -14,9 +15,7 @@ export default function ApiHeader({
       {/* Top Bar: Title & Global Actions */}
       <div className="sr-header">
         <div className="sr-header-brand">
-          <div className="sr-icon-wrapper-primary">
-            <Code2 className="sr-icon" />
-          </div>
+          <img src={sapLogo} alt="SAP logo" className="sr-icon" style={{ objectFit: 'cover', width: '100px', height: '50px' }} />
           <div>
             <h1 className="sr-header-title">SmartRecruiters API Storyboard</h1>
             <p className="sr-header-subtitle">Executive Demonstration Portal</p>

@@ -261,16 +261,32 @@ export default function GoogleSheetImportStoryboard() {
       ]);
     } else if (stepNumber === 2) {
       setStatus('parsing');
+
+      const totalCount = sheetRows.length;
+      const allNormalized = sheetRows.map((r) => formatSmartRecruitersPayload(r));
+
+      // Truncate records payload if it exceeds 20 rows
+      const maxPreviewRows = 3;
+      const displayedRecords = totalCount > maxPreviewRows
+        ? [
+            ...allNormalized.slice(0, maxPreviewRows),
+            `... [${totalCount - maxPreviewRows} additional candidate records truncated for preview]`
+          ]
+        : allNormalized;
+
       setLogs((prev) => [
         ...prev,
         {
           id: Date.now(),
           time,
           title: 'Data Extraction & Schema Mapping',
-          details: 'Backend worker extracted raw sheet rows and formatted them into SmartRecruiters OpenAPI Candidate objects.',
+          details: totalCount > maxPreviewRows
+            ? `Extracted ${totalCount} sheet rows. Showing first ${maxPreviewRows} normalized candidate payloads.`
+            : 'Backend worker extracted raw sheet rows and formatted them into SmartRecruiters OpenAPI Candidate objects.',
           payload: {
             mappedFields: EXPECTED_HEADERS,
-            normalizedRecords: sheetRows.map((r) => formatSmartRecruitersPayload(r))
+            totalRowsCount: totalCount,
+            normalizedRecords: displayedRecords
           },
           statusType: 'process'
         }
