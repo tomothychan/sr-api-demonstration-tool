@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ApiHeader from './ApiHeader';
 import CandidateApplicationStoryboard from '../scenarios/CandidateApplicationStoryboard';
 import SuccessFactorsHandoffStoryboard from '../scenarios/SuccessFactorsHandoffStoryboard';
+import GoogleSheetImportStoryBoard from '../scenarios/GoogleSheetImportStoryBoard';
 import '../index.css';
 
 export default function ApiStoryboardApp() {
@@ -31,7 +32,8 @@ export default function ApiStoryboardApp() {
   const TABS = [
     { id: 'candidate-app', number: '01', label: 'Candidate Application' },
     { id: 'hired-webhook', number: '02', label: 'SuccessFactors Handoff' },
-    { id: 'self-scheduling', number: '03', label: 'Auto Self-Scheduling' }
+    { id: 'gsheet-import', number: '03', label: 'Google Sheet Batch Sourcing' },
+    { id: 'self-scheduling', number: '04', label: 'Auto Self-Scheduling' }
   ];
 
   return (
@@ -53,6 +55,10 @@ export default function ApiStoryboardApp() {
 
         {activeTab === 'hired-webhook' && (
           <SuccessFactorsHandoffStoryboard key={resetKey} />
+        )}
+
+        {activeTab === 'gsheet-import' && (
+          <GoogleSheetImportStoryBoard key={resetKey} />
         )}
 
         {activeTab === 'self-scheduling' && (
