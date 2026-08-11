@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -6,10 +6,15 @@ import {
   Building2, 
   Workflow, 
   FileCheck,
-  ArrowLeftCircleIcon
+  ArrowLeftCircleIcon,
+  Play,
+  Pause,
+  StepForward
 } from 'lucide-react';
 
 export default function SuccessFactorsHandoffStoryboard() {
+  const TOTAL_STEPS = 4;
+
   // Editable Candidate State
   const [candidate, setCandidate] = useState({
     name: 'Sarah Jenkins',
@@ -23,8 +28,25 @@ export default function SuccessFactorsHandoffStoryboard() {
 
   const [status, setStatus] = useState('idle'); // idle | webhook | cpi_transform | complete
   const [logs, setLogs] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0); // 0 to 4
+  const [isRunningAll, setIsRunningAll] = useState(false);
 
-  // Handler for dynamic input updates
+  const isCompleted = currentStep >= TOTAL_STEPS;
+  const isSimulationRunning = currentStep > 0 && !isCompleted;
+
+  // Auto-advance loop when "Run All" is active
+  useEffect(() => {
+    let timer;
+    if (isRunningAll && currentStep > 0 && currentStep < TOTAL_STEPS) {
+      timer = setTimeout(() => {
+        executeStep(currentStep + 1);
+      }, 900);
+    } else if (currentStep >= TOTAL_STEPS) {
+      setIsRunningAll(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isRunningAll, currentStep]);
+
   const handleInputChange = (field, value) => {
     setCandidate((prev) => ({
       ...prev,
@@ -32,97 +54,127 @@ export default function SuccessFactorsHandoffStoryboard() {
     }));
   };
 
-  const addLog = (title, details, payload = null, statusType = 'info') => {
-    setLogs((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        time: new Date().toLocaleTimeString(),
-        title,
-        details,
-        payload,
-        statusType
-      }
-    ]);
+  const executeStep = (stepNumber) => {
+    if (stepNumber > TOTAL_STEPS) return;
+
+    const time = new Date().toLocaleTimeString();
+
+    if (stepNumber === 1) {
+      setStatus('webhook');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'Recruiter Action: Candidate Status Updated to HIRED',
+          details: `Candidate [${candidate.name}] moved to final Hired stage on job requisition [JOB-7712].`,
+          payload: null,
+          statusType: 'action'
+        }
+      ]);
+    } else if (stepNumber === 2) {
+      setStatus('cpi_transform');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'SmartRecruiters Event: candidate.hired (Webhook)',
+          details: 'SmartRecruiters fires real-time event JSON payload to registered SAP CPI webhook endpoint.',
+          payload: {
+            eventId: 'evt_9988776655',
+            eventType: 'candidate.hired',
+            candidateId: 'cand_44332211-uuid',
+            jobId: 'JOB-7712',
+            offerData: {
+              candidateName: candidate.name,
+              jobTitle: candidate.role,
+              baseSalary: Number(candidate.salary) || candidate.salary,
+              currency: candidate.currency,
+              startDate: candidate.startDate,
+              costCenter: candidate.costCenter,
+              managerId: candidate.managerId
+            }
+          },
+          statusType: 'process'
+        }
+      ]);
+    } else if (stepNumber === 3) {
+      setStatus('cpi_transform');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'SAP CPI Middleware: Field Transformation & OData Mapping',
+          details: 'SAP Integration Suite maps SmartRecruiters JSON properties to SuccessFactors Employee Central OData API fields.',
+          payload: {
+            sfEntity: 'EmpEmployment',
+            mappedFields: {
+              personIdExternal: 'PENDING_cand_44332211',
+              startDate: candidate.startDate,
+              department: candidate.costCenter,
+              manager: candidate.managerId,
+              compensation: `${candidate.salary} ${candidate.currency}`
+            }
+          },
+          statusType: 'process'
+        }
+      ]);
+    } else if (stepNumber === 4) {
+      setStatus('complete');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'SAP SuccessFactors: 201 Created (Manage Pending Hires)',
+          details: 'Data successfully written to SuccessFactors EC queue. Profile ready for pre-onboarding.',
+          payload: {
+            status: 201,
+            statusText: 'Created',
+            sfRecord: {
+              personIdExternal: 'SF_EMP_2026_9012',
+              pendingHireStatus: 'READY_FOR_ONBOARDING',
+              assignedOnboardingWorkflow: 'US_CORP_ONBOARDING_V2'
+            }
+          },
+          statusType: 'success'
+        }
+      ]);
+    }
+
+    setCurrentStep(stepNumber);
   };
 
-  const runHiredSimulation = async (e) => {
+  // Submit Action (Runs single step instead of auto-running all)
+  const handleHiredSimulationSubmit = (e) => {
     e.preventDefault();
-    setLogs([]);
-
-    // Step 1: Recruiter Action inside SmartRecruiters
-    setStatus('webhook');
-    addLog(
-      'Recruiter Action: Candidate Status Updated to HIRED',
-      `Candidate [${candidate.name}] moved to final Hired stage on job requisition [JOB-7712].`,
-      null,
-      'action'
-    );
-
-    // Step 2: SmartRecruiters Outbound Webhook Event
-    await new Promise((res) => setTimeout(res, 900));
-    setStatus('cpi_transform');
-    addLog(
-      'SmartRecruiters Event: candidate.hired (Webhook)',
-      'SmartRecruiters fires real-time event JSON payload to registered SAP CPI webhook endpoint.',
-      {
-        eventId: 'evt_9988776655',
-        eventType: 'candidate.hired',
-        candidateId: 'cand_44332211-uuid',
-        jobId: 'JOB-7712',
-        offerData: {
-          candidateName: candidate.name,
-          jobTitle: candidate.role,
-          baseSalary: Number(candidate.salary) || candidate.salary,
-          currency: candidate.currency,
-          startDate: candidate.startDate,
-          costCenter: candidate.costCenter,
-          managerId: candidate.managerId
-        }
-      },
-      'process'
-    );
-
-    // Step 3: SAP Integration Suite (CPI) Transformation
-    await new Promise((res) => setTimeout(res, 1100));
-    setStatus('complete');
-    addLog(
-      'SAP CPI Middleware: Field Transformation & OData Mapping',
-      'SAP Integration Suite maps SmartRecruiters JSON properties to SuccessFactors Employee Central OData API fields.',
-      {
-        sfEntity: 'EmpEmployment',
-        mappedFields: {
-          personIdExternal: 'PENDING_cand_44332211',
-          startDate: candidate.startDate,
-          department: candidate.costCenter,
-          manager: candidate.managerId,
-          compensation: `${candidate.salary} ${candidate.currency}`
-        }
-      },
-      'process'
-    );
-
-    // Step 4: SuccessFactors Confirmation
-    await new Promise((res) => setTimeout(res, 1000));
-    setStatus('idle'); // Re-enable fields once simulation finishes
-    addLog(
-      'SAP SuccessFactors: 201 Created (Manage Pending Hires)',
-      'Data successfully written to SuccessFactors EC queue. Profile ready for pre-onboarding.',
-      {
-        status: 201,
-        statusText: 'Created',
-        sfRecord: {
-          personIdExternal: 'SF_EMP_2026_9012',
-          pendingHireStatus: 'READY_FOR_ONBOARDING',
-          assignedOnboardingWorkflow: 'US_CORP_ONBOARDING_V2'
-        }
-      },
-      'success'
-    );
+    if (currentStep === 0) {
+      setLogs([]);
+      executeStep(1);
+    } else if (!isCompleted) {
+      executeStep(currentStep + 1);
+    }
   };
 
-  // Inputs are editable when idle, disabled during simulation running
-  const isSimulationRunning = status !== 'idle';
+  const handleRunStep = () => {
+    if (isCompleted) return;
+    executeStep(currentStep + 1);
+  };
+
+  const handleToggleRunAll = () => {
+    if (isCompleted) return;
+
+    if (isRunningAll) {
+      setIsRunningAll(false);
+    } else {
+      setIsRunningAll(true);
+      if (currentStep === 0) {
+        executeStep(1);
+      }
+    }
+  };
 
   return (
     <div className="sr-main-split">
@@ -135,9 +187,9 @@ export default function SuccessFactorsHandoffStoryboard() {
             <p className="sr-subtitle">Customize candidate data, then run the simulation to inspect the API payloads.</p>
           </div>
 
-          <form onSubmit={runHiredSimulation} className="sr-card">
+          <form onSubmit={handleHiredSimulationSubmit} className="sr-card">
             {/* Candidate Header Summary */}
-            <div style={{ display: 'flex', items: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
               <div className="sr-icon-wrapper-primary">
                 <Building2 className="sr-icon" />
               </div>
@@ -148,7 +200,7 @@ export default function SuccessFactorsHandoffStoryboard() {
                   style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.25rem' }}
                   value={candidate.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  disabled={isSimulationRunning}
+                  disabled={currentStep > 0}
                   placeholder="Candidate Name"
                 />
                 <input
@@ -157,7 +209,7 @@ export default function SuccessFactorsHandoffStoryboard() {
                   style={{ fontSize: '0.8rem' }}
                   value={candidate.role}
                   onChange={(e) => handleInputChange('role', e.target.value)}
-                  disabled={isSimulationRunning}
+                  disabled={currentStep > 0}
                   placeholder="Job Title"
                 />
               </div>
@@ -172,7 +224,7 @@ export default function SuccessFactorsHandoffStoryboard() {
                   className="sr-input" 
                   value={candidate.salary} 
                   onChange={(e) => handleInputChange('salary', e.target.value)}
-                  disabled={isSimulationRunning} 
+                  disabled={currentStep > 0} 
                 />
               </div>
 
@@ -183,7 +235,7 @@ export default function SuccessFactorsHandoffStoryboard() {
                   className="sr-input" 
                   value={candidate.costCenter} 
                   onChange={(e) => handleInputChange('costCenter', e.target.value)}
-                  disabled={isSimulationRunning} 
+                  disabled={currentStep > 0} 
                 />
               </div>
 
@@ -194,7 +246,7 @@ export default function SuccessFactorsHandoffStoryboard() {
                   className="sr-input" 
                   value={candidate.managerId} 
                   onChange={(e) => handleInputChange('managerId', e.target.value)}
-                  disabled={isSimulationRunning} 
+                  disabled={currentStep > 0} 
                 />
               </div>
 
@@ -205,7 +257,7 @@ export default function SuccessFactorsHandoffStoryboard() {
                   className="sr-input" 
                   value={candidate.startDate} 
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  disabled={isSimulationRunning} 
+                  disabled={currentStep > 0} 
                 />
               </div>
             </div>
@@ -213,13 +265,15 @@ export default function SuccessFactorsHandoffStoryboard() {
             <div className="sr-form-actions">
               <button
                 type="submit"
-                disabled={isSimulationRunning}
-                className={`sr-btn ${!isSimulationRunning ? 'sr-btn-primary' : 'sr-btn-disabled'}`}
+                disabled={isCompleted || isRunningAll}
+                className={`sr-btn ${!isCompleted && !isRunningAll ? 'sr-btn-primary' : 'sr-btn-disabled'}`}
               >
                 <span>
-                  {!isSimulationRunning 
+                  {currentStep === 0 
                     ? 'Mark Candidate as Hired' 
-                    : 'Processing Handoff Payload...'}
+                    : isCompleted 
+                    ? 'Handoff Completed' 
+                    : `Next Step (${currentStep + 1}/${TOTAL_STEPS})`}
                 </span>
                 <FileCheck className="sr-icon-sm" />
               </button>
@@ -231,16 +285,56 @@ export default function SuccessFactorsHandoffStoryboard() {
       {/* RIGHT PANEL: Middleware & API Inspector */}
       <section className="sr-panel sr-panel-right">
         <div className="sr-section-header">
-          <span className="sr-badge sr-badge-green">Integration Suite (CPI Bridge)</span>
-          <h2 className="sr-title">SmartRecruiters ➔ SuccessFactors Flow</h2>
-          <p className="sr-subtitle">Inspect how Webhook triggers convert into SuccessFactors OData API records.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <span className="sr-badge sr-badge-green">Integration Suite (CPI Bridge)</span>
+              <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>SmartRecruiters ➔ SuccessFactors Flow</h2>
+            </div>
+
+            {/* Step Execution Buttons */}
+            <div className="sr-header-actions">
+              <button
+                type="button"
+                onClick={handleRunStep}
+                disabled={isCompleted || isRunningAll}
+                className={`sr-btn ${!isCompleted && !isRunningAll ? 'sr-btn-secondary' : 'sr-btn-disabled'}`}
+                title="Execute next step"
+              >
+                <StepForward className="sr-icon-sm" />
+                <span>Run step</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleToggleRunAll}
+                disabled={isCompleted}
+                className={`sr-btn ${!isCompleted ? (isRunningAll ? 'sr-btn-secondary' : 'sr-btn-primary') : 'sr-btn-disabled'}`}
+                title={isRunningAll ? 'Pause execution' : 'Run all steps'}
+              >
+                {isRunningAll ? (
+                  <>
+                    <Pause className="sr-icon-sm" />
+                    <span>Pause</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="sr-icon-sm" />
+                    <span>Run all</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          <p className="sr-subtitle" style={{ marginTop: '0.5rem' }}>
+            Inspect how Webhook triggers convert into SuccessFactors OData API records.
+          </p>
         </div>
 
         <div className="sr-log-timeline">
           {logs.length === 0 ? (
             <div className="sr-empty-state">
               <ArrowLeftCircleIcon className="sr-icon-lg sr-pulse" />
-              <p>Click "Mark Candidate as Hired" on the left to trigger the webhook flow.</p>
+              <p>Click "Mark Candidate as Hired" on the left or "Run step" to trigger the webhook flow.</p>
             </div>
           ) : (
             logs.map((log) => (

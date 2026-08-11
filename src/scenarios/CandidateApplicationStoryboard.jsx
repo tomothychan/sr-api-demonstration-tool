@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   ArrowRight, 
   Database, 
   UserCheck, 
   Send, 
-  ArrowLeftCircleIcon
+  ArrowLeftCircleIcon,
+  Play,
+  Pause,
+  StepForward
 } from 'lucide-react';
 
 export default function CandidateApplicationStoryboard() {
+  const TOTAL_STEPS = 4;
+
   const [formData, setFormData] = useState({
     firstName: 'Alex',
     lastName: 'Morgan',
@@ -18,76 +23,128 @@ export default function CandidateApplicationStoryboard() {
 
   const [status, setStatus] = useState('idle'); // idle | parsing | dedup | posting | complete
   const [logs, setLogs] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0); // 0 (not started) to 4 (completed)
+  const [isRunningAll, setIsRunningAll] = useState(false);
 
-  const addLog = (title, details, payload = null, statusType = 'info') => {
-    setLogs((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        time: new Date().toLocaleTimeString(),
-        title,
-        details,
-        payload,
-        statusType
-      }
-    ]);
+  const isCompleted = currentStep >= TOTAL_STEPS;
+  const isSimulationRunning = currentStep > 0 && !isCompleted;
+
+  // Auto-advance interval loop when "Run All" is active
+  useEffect(() => {
+    let timer;
+    if (isRunningAll && currentStep > 0 && currentStep < TOTAL_STEPS) {
+      timer = setTimeout(() => {
+        executeStep(currentStep + 1);
+      }, 900);
+    } else if (currentStep >= TOTAL_STEPS) {
+      setIsRunningAll(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isRunningAll, currentStep]);
+
+  const executeStep = (stepNumber) => {
+    if (stepNumber > TOTAL_STEPS) return;
+
+    const time = new Date().toLocaleTimeString();
+
+    if (stepNumber === 1) {
+      setStatus('parsing');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'Client Action: Form Submitted',
+          details: 'Candidate submits job application on custom career site portal.',
+          payload: null,
+          statusType: 'action'
+        }
+      ]);
+    } else if (stepNumber === 2) {
+      setStatus('dedup');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'Data Transformation: Resume & Profile Parsing',
+          details: 'Client wrapper converts inputs into SmartRecruiters Open Web API JSON format.',
+          payload: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            consent: { type: 'GDPR', acquired: true }
+          },
+          statusType: 'process'
+        }
+      ]);
+    } else if (stepNumber === 3) {
+      setStatus('posting');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'API Pre-Check: Email Deduplication Anchoring',
+          details: `Querying backend for existing candidate with email [${formData.email}]. Result: No duplicate match.`,
+          payload: { query: `email EQ '${formData.email}'`, matchFound: false },
+          statusType: 'process'
+        }
+      ]);
+    } else if (stepNumber === 4) {
+      setStatus('complete');
+      setLogs((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          time,
+          title: 'HTTP POST /postings/job-7712/candidates',
+          details: 'SmartRecruiters processes payload, generates UUIDs, and creates candidate record.',
+          payload: {
+            status: 201,
+            statusText: 'Created',
+            data: {
+              candidateId: 'cand_987654321-uuid',
+              applicationId: 'app_1122334455-uuid',
+              currentStage: 'NEW'
+            }
+          },
+          statusType: 'success'
+        }
+      ]);
+    }
+
+    setCurrentStep(stepNumber);
   };
 
-  const runApiSimulation = async (e) => {
+  // Form Submit Action (Starts "Run step" from beginning)
+  const handleFormSubmit = (e) => {
     e.preventDefault();
-    setLogs([]);
-    
-    // Step 1: Form Submitted
-    setStatus('parsing');
-    addLog(
-      'Client Action: Form Submitted',
-      'Candidate submits job application on custom career site portal.',
-      null,
-      'action'
-    );
+    if (currentStep === 0) {
+      setLogs([]);
+      executeStep(1);
+    } else if (!isCompleted) {
+      executeStep(currentStep + 1);
+    }
+  };
 
-    // Step 2: Resume Parsing & Payload Creation
-    await new Promise((res) => setTimeout(res, 800));
-    setStatus('dedup');
-    addLog(
-      'Data Transformation: Resume & Profile Parsing',
-      'Client wrapper converts inputs into SmartRecruiters Open Web API JSON format.',
-      {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        consent: { type: 'GDPR', acquired: true }
-      },
-      'process'
-    );
+  // Step Controls
+  const handleRunStep = () => {
+    if (isCompleted) return;
+    executeStep(currentStep + 1);
+  };
 
-    // Step 3: Deduplication
-    await new Promise((res) => setTimeout(res, 1000));
-    setStatus('posting');
-    addLog(
-      'API Pre-Check: Email Deduplication Anchoring',
-      `Querying backend for existing candidate with email [${formData.email}]. Result: No duplicate match.`,
-      { query: `email EQ '${formData.email}'`, matchFound: false },
-      'process'
-    );
+  const handleToggleRunAll = () => {
+    if (isCompleted) return;
 
-    // Step 4: Execute API POST Call
-    await new Promise((res) => setTimeout(res, 900));
-    setStatus('complete');
-    addLog(
-      'HTTP POST /postings/job-7712/candidates',
-      'SmartRecruiters processes payload, generates UUIDs, and creates candidate record.',
-      {
-        status: 201,
-        statusText: 'Created',
-        data: {
-          candidateId: 'cand_987654321-uuid',
-          applicationId: 'app_1122334455-uuid',
-          currentStage: 'NEW'
-        }
-      },
-      'success'
-    );
+    if (isRunningAll) {
+      setIsRunningAll(false);
+    } else {
+      setIsRunningAll(true);
+      if (currentStep === 0) {
+        executeStep(1);
+      }
+    }
   };
 
   return (
@@ -101,7 +158,7 @@ export default function CandidateApplicationStoryboard() {
             <p className="sr-subtitle">Simulate how a job seeker interacts with your custom front-end portal.</p>
           </div>
 
-          <form onSubmit={runApiSimulation} className="sr-card sr-form">
+          <form onSubmit={handleFormSubmit} className="sr-card sr-form">
             <div className="sr-form-group">
               <label className="sr-label">First Name</label>
               <input
@@ -109,7 +166,7 @@ export default function CandidateApplicationStoryboard() {
                 className="sr-input"
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                disabled={status !== 'idle'}
+                disabled={currentStep > 0}
               />
             </div>
 
@@ -120,7 +177,7 @@ export default function CandidateApplicationStoryboard() {
                 className="sr-input"
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                disabled={status !== 'idle'}
+                disabled={currentStep > 0}
               />
             </div>
 
@@ -131,18 +188,24 @@ export default function CandidateApplicationStoryboard() {
                 className="sr-input"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={status !== 'idle'}
+                disabled={currentStep > 0}
               />
             </div>
 
             <div className="sr-form-actions">
               <button
                 type="submit"
-                disabled={status !== 'idle'}
-                className={`sr-btn ${status === 'idle' ? 'sr-btn-primary' : 'sr-btn-disabled'}`}
+                disabled={isCompleted || isRunningAll}
+                className={`sr-btn ${!isCompleted && !isRunningAll ? 'sr-btn-primary' : 'sr-btn-disabled'}`}
               >
-                <span>{status === 'idle' ? 'Submit Application' : 'Processing API Event...'}</span>
-                {status === 'idle' && <Send className="sr-icon-sm" />}
+                <span>
+                  {currentStep === 0 
+                    ? 'Submit Application' 
+                    : isCompleted 
+                    ? 'Simulation Completed' 
+                    : `Next Step (${currentStep + 1}/${TOTAL_STEPS})`}
+                </span>
+                {currentStep === 0 && <Send className="sr-icon-sm" />}
               </button>
             </div>
           </form>
@@ -152,16 +215,56 @@ export default function CandidateApplicationStoryboard() {
       {/* RIGHT PANEL: API Inspector */}
       <section className="sr-panel sr-panel-right">
         <div className="sr-section-header">
-          <span className="sr-badge sr-badge-green">Behind the Scenes (API Inspector)</span>
-          <h2 className="sr-title">Real-Time Data Execution</h2>
-          <p className="sr-subtitle">Translates user interactions directly into API events, business logic, and JSON payloads.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div>
+              <span className="sr-badge sr-badge-green">Behind the Scenes (API Inspector)</span>
+              <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>Real-Time Data Execution</h2>
+            </div>
+
+            {/* Step Execution Buttons */}
+            <div className="sr-header-actions">
+              <button
+                type="button"
+                onClick={handleRunStep}
+                disabled={isCompleted || isRunningAll}
+                className={`sr-btn ${!isCompleted && !isRunningAll ? 'sr-btn-secondary' : 'sr-btn-disabled'}`}
+                title="Execute next step"
+              >
+                <StepForward className="sr-icon-sm" />
+                <span>Run step</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleToggleRunAll}
+                disabled={isCompleted}
+                className={`sr-btn ${!isCompleted ? (isRunningAll ? 'sr-btn-secondary' : 'sr-btn-primary') : 'sr-btn-disabled'}`}
+                title={isRunningAll ? 'Pause execution' : 'Run all steps'}
+              >
+                {isRunningAll ? (
+                  <>
+                    <Pause className="sr-icon-sm" />
+                    <span>Pause</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="sr-icon-sm" />
+                    <span>Run all</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          <p className="sr-subtitle" style={{ marginTop: '0.5rem' }}>
+            Translates user interactions directly into API events, business logic, and JSON payloads.
+          </p>
         </div>
 
         <div className="sr-log-timeline">
           {logs.length === 0 ? (
             <div className="sr-empty-state">
               <ArrowLeftCircleIcon className="sr-icon-lg sr-pulse" />
-              <p>Submit the form on the left to inspect the API workflow.</p>
+              <p>Submit the form on the left or click "Run step" to inspect the API workflow.</p>
             </div>
           ) : (
             logs.map((log) => (
