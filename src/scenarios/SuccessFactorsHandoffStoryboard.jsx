@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, 
-  ArrowRight, 
   UserCheck, 
   Building2, 
   Workflow, 
@@ -11,6 +10,31 @@ import {
   Pause,
   StepForward
 } from 'lucide-react';
+
+// Custom smooth scroll function with configurable speed (duration in ms)
+const smoothScrollTo = (element, targetTop, duration = 1200) => {
+  if (!element) return;
+  const startTop = element.scrollTop;
+  const distance = targetTop - startTop;
+  let startTime = null;
+
+  const animation = (currentTime) => {
+    if (!startTime) startTime = currentTime;
+    const timeElapsed = currentTime - startTime;
+    const progress = Math.min(timeElapsed / duration, 1);
+    
+    // Ease-out cubic curve
+    const ease = 1 - Math.pow(1 - progress, 3);
+    
+    element.scrollTop = startTop + distance * ease;
+
+    if (timeElapsed < duration) {
+      requestAnimationFrame(animation);
+    }
+  };
+
+  requestAnimationFrame(animation);
+};
 
 export default function SuccessFactorsHandoffStoryboard() {
   const TOTAL_STEPS = 4;
@@ -31,6 +55,18 @@ export default function SuccessFactorsHandoffStoryboard() {
   const [currentStep, setCurrentStep] = useState(0); // 0 to 4
   const [isRunningAll, setIsRunningAll] = useState(false);
 
+  // Ref attached directly to scrollable timeline container
+  const timelineRef = useRef(null);
+
+  // Smooth auto-scroll timeline container whenever logs update
+  useEffect(() => {
+    if (timelineRef.current) {
+      setTimeout(() => {
+        smoothScrollTo(timelineRef.current, timelineRef.current.scrollHeight, 350);
+      }, 50);
+    }
+  }, [logs]);
+
   const isCompleted = currentStep >= TOTAL_STEPS;
   const isSimulationRunning = currentStep > 0 && !isCompleted;
 
@@ -40,7 +76,7 @@ export default function SuccessFactorsHandoffStoryboard() {
     if (isRunningAll && currentStep > 0 && currentStep < TOTAL_STEPS) {
       timer = setTimeout(() => {
         executeStep(currentStep + 1);
-      }, 900);
+      }, 1000);
     } else if (currentStep >= TOTAL_STEPS) {
       setIsRunningAll(false);
     }
@@ -283,58 +319,42 @@ export default function SuccessFactorsHandoffStoryboard() {
       </section>
 
       {/* RIGHT PANEL: Middleware & API Inspector */}
-      <section className="sr-panel sr-panel-right">
-        <div className="sr-section-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div>
-              <span className="sr-badge sr-badge-green">Integration Suite (CPI Bridge)</span>
-              <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>SmartRecruiters ➔ SuccessFactors Flow</h2>
-            </div>
-
-            {/* Step Execution Buttons */}
-            <div className="sr-header-actions">
-              <button
-                type="button"
-                onClick={handleRunStep}
-                disabled={isCompleted || isRunningAll}
-                className={`sr-btn ${!isCompleted && !isRunningAll ? 'sr-btn-secondary' : 'sr-btn-disabled'}`}
-                title="Execute next step"
-              >
-                <StepForward className="sr-icon-sm" />
-                <span>Run step</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleToggleRunAll}
-                disabled={isCompleted}
-                className={`sr-btn ${!isCompleted ? (isRunningAll ? 'sr-btn-secondary' : 'sr-btn-primary') : 'sr-btn-disabled'}`}
-                title={isRunningAll ? 'Pause execution' : 'Run all steps'}
-              >
-                {isRunningAll ? (
-                  <>
-                    <Pause className="sr-icon-sm" />
-                    <span>Pause</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="sr-icon-sm" />
-                    <span>Run all</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-          <p className="sr-subtitle" style={{ marginTop: '0.5rem' }}>
+      <section 
+        className="sr-panel sr-panel-right"
+        style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          height: '100%', 
+          overflow: 'hidden',
+          paddingBottom: '1.5rem'
+        }}
+      >
+        {/* Header */}
+        <div className="sr-section-header" style={{ marginBottom: '1rem', flexShrink: 0 }}>
+          <span className="sr-badge sr-badge-green">Integration Suite (CPI Bridge)</span>
+          <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>SmartRecruiters ➔ SuccessFactors Flow</h2>
+          <p className="sr-subtitle" style={{ marginTop: '0.25rem' }}>
             Inspect how Webhook triggers convert into SuccessFactors OData API records.
           </p>
         </div>
 
-        <div className="sr-log-timeline">
+        {/* Scrollable Timeline */}
+        <div 
+          ref={timelineRef}
+          className="sr-log-timeline"
+          style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            paddingRight: '0.5rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}
+        >
           {logs.length === 0 ? (
             <div className="sr-empty-state">
               <ArrowLeftCircleIcon className="sr-icon-lg sr-pulse" />
-              <p>Click "Mark Candidate as Hired" on the left or "Run step" to trigger the webhook flow.</p>
+              <p>Click "Mark Candidate as Hired" on the left or "Run step" below to trigger the webhook flow.</p>
             </div>
           ) : (
             logs.map((log) => (
@@ -363,6 +383,50 @@ export default function SuccessFactorsHandoffStoryboard() {
               </div>
             ))
           )}
+        </div>
+
+        {/* PINNED ACTION BAR AT THE BOTTOM */}
+        <div 
+          style={{ 
+            marginTop: '1rem', 
+            paddingTop: '1rem', 
+            borderTop: '1px solid var(--sr-color-border)', 
+            display: 'flex', 
+            justify: 'flex-end', 
+            gap: '0.75rem',
+            flexShrink: 0
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleRunStep}
+            disabled={isCompleted || isRunningAll}
+            className={`sr-btn ${!isCompleted && !isRunningAll ? 'sr-btn-secondary' : 'sr-btn-disabled'}`}
+            title="Execute next step"
+          >
+            <StepForward className="sr-icon-sm" />
+            <span>Run step</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleToggleRunAll}
+            disabled={isCompleted}
+            className={`sr-btn ${!isCompleted ? (isRunningAll ? 'sr-btn-secondary' : 'sr-btn-primary') : 'sr-btn-disabled'}`}
+            title={isRunningAll ? 'Pause execution' : 'Run all steps'}
+          >
+            {isRunningAll ? (
+              <>
+                <Pause className="sr-icon-sm" />
+                <span>Pause</span>
+              </>
+            ) : (
+              <>
+                <Play className="sr-icon-sm" />
+                <span>Run all</span>
+              </>
+            )}
+          </button>
         </div>
       </section>
     </div>
