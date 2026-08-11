@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ApiHeader from './ApiHeader';
 import CandidateApplicationStoryboard from '../scenarios/CandidateApplicationStoryboard';
+import SuccessFactorsHandoffStoryboard from '../scenarios/SuccessFactorsHandoffStoryboard';
 import '../index.css';
 
 export default function ApiStoryboardApp() {
@@ -51,10 +52,7 @@ export default function ApiStoryboardApp() {
         )}
 
         {activeTab === 'hired-webhook' && (
-          <div className="sr-empty-state-tab">
-            <h2>SuccessFactors Handoff Scenario</h2>
-            <p>Ready to build: Webhook payload triggers when candidate is marked as Hired.</p>
-          </div>
+          <SuccessFactorsHandoffStoryboard key={resetKey} />
         )}
 
         {activeTab === 'self-scheduling' && (
