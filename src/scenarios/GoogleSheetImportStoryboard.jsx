@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  CheckCircle2, 
-  UserCheck, 
   FileSpreadsheet, 
-  Workflow, 
-  ArrowLeftCircleIcon,
-  Play,
-  Pause,
-  StepForward,
-  UploadCloud,
-  ExternalLink,
-  RefreshCw
+  UploadCloud, 
+  ExternalLink, 
+  RefreshCw 
 } from 'lucide-react';
+import InspectorPanel from '../components/InspectorPanel';
 
 export default function GoogleSheetImportStoryboard() {
   const SPREADSHEET_ID = '1wsv_BMdI02I_VRXO3taTvdXUfcpe1gYYtkIkDYqnIT0';
@@ -29,65 +23,18 @@ export default function GoogleSheetImportStoryboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
-  const [status, setStatus] = useState('idle'); 
   const [logs, setLogs] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isRunningAll, setIsRunningAll] = useState(false);
 
-  // Ref attached directly to the scrollable timeline container
-  const timelineRef = useRef(null);
-
-  // Custom smooth scroll function with configurable speed (duration in ms)
-  const smoothScrollTo = (element, targetTop, duration = 400) => {
-    if (!element) return;
-    const startTop = element.scrollTop;
-    const distance = targetTop - startTop;
-    let startTime = null;
-
-    const animation = (currentTime) => {
-      if (!startTime) startTime = currentTime;
-      const timeElapsed = currentTime - startTime;
-      const progress = Math.min(timeElapsed / duration, 1);
-      
-      // Smooth ease-out curve
-      const ease = 1 - Math.pow(1 - progress, 3);
-      
-      element.scrollTop = startTop + distance * ease;
-
-      if (timeElapsed < duration) {
-        requestAnimationFrame(animation);
-      }
-    };
-
-    requestAnimationFrame(animation);
-  };
-  // Set your desired scroll speed here (lower = faster, higher = slower)
-  const SCROLL_SPEED_MS = 1400; 
-
-  // Auto-scroll the timeline container down with custom speed
-  useEffect(() => {
-    if (timelineRef.current) {
-      setTimeout(() => {
-        smoothScrollTo(
-          timelineRef.current, 
-          timelineRef.current.scrollHeight, 
-          SCROLL_SPEED_MS
-        );
-      }, 50);
-    }
-  }, [logs]);
-
   // Dynamic total steps: 2 setup steps + 1 step per candidate row
   const TOTAL_STEPS = Math.max(sheetRows.length + 2, 3);
   const isCompleted = currentStep >= TOTAL_STEPS;
-  const isSimulationRunning = currentStep > 0 && !isCompleted;
 
-  // Dynamic step delay calculation based on total sheet entries
+  // Dynamic step delay calculation
   const getStepDelay = (nextStepNumber, entryCount) => {
     // Force 2000ms for the first 4 steps regardless of row count
-    if (nextStepNumber <= 4) {
-      return 3000;
-    }
+    if (nextStepNumber <= 4) return 2000;
 
     // Step 5 onwards: speed based on total sheet entries
     if (entryCount <= 3) return 3000;
@@ -96,7 +43,7 @@ export default function GoogleSheetImportStoryboard() {
     return 150; // 10+ entries
   };
 
-  // Helper to parse raw CSV text safely
+  // Helper to parse raw CSV string safely
   const parseCSV = (csvText) => {
     const lines = csvText.split(/\r\n|\n/).filter((l) => l.trim().length > 0);
     if (lines.length === 0) return { headers: EXPECTED_HEADERS, rows: [] };
@@ -160,33 +107,17 @@ export default function GoogleSheetImportStoryboard() {
       setSheetRows([
         {
           id: 1,
-          firstName: 'Elena',
-          lastName: 'Rostova',
-          email: 'elena.rostova@example.com',
-          phone: '+1-555-0142',
-          city: 'San Francisco',
-          country: 'US',
-          jobId: 'job-7712',
-          institution: 'UC Berkeley',
-          degree: 'Bachelor of Science',
-          major: 'Computer Science',
-          eduStartDate: '2018-09-01',
-          eduEndDate: '2022-05-15'
+          firstName: 'Elena', lastName: 'Rostova', email: 'elena.rostova@example.com',
+          phone: '+1-555-0142', city: 'San Francisco', country: 'US', jobId: 'job-7712',
+          institution: 'UC Berkeley', degree: 'Bachelor of Science', major: 'Computer Science',
+          eduStartDate: '2018-09-01', eduEndDate: '2022-05-15'
         },
         {
           id: 2,
-          firstName: 'Marcus',
-          lastName: 'Vance',
-          email: 'marcus.vance@example.com',
-          phone: '+1-555-0198',
-          city: 'London',
-          country: 'GB',
-          jobId: 'job-8840',
-          institution: 'Imperial College London',
-          degree: 'Master of Engineering',
-          major: 'Software Engineering',
-          eduStartDate: '2019-10-01',
-          eduEndDate: '2023-06-30'
+          firstName: 'Marcus', lastName: 'Vance', email: 'marcus.vance@example.com',
+          phone: '+1-555-0198', city: 'London', country: 'GB', jobId: 'job-8840',
+          institution: 'Imperial College London', degree: 'Master of Engineering', major: 'Software Engineering',
+          eduStartDate: '2019-10-01', eduEndDate: '2023-06-30'
         }
       ]);
     } finally {
@@ -198,7 +129,7 @@ export default function GoogleSheetImportStoryboard() {
     fetchSheetData();
   }, []);
 
-  // 2. Auto-advance loop when "Run All" is active with dynamic delay
+  // 2. Auto-advance loop when "Run All" is active
   useEffect(() => {
     let timer;
     if (isRunningAll && currentStep > 0 && currentStep < TOTAL_STEPS) {
@@ -242,7 +173,6 @@ export default function GoogleSheetImportStoryboard() {
     const time = new Date().toLocaleTimeString();
 
     if (stepNumber === 1) {
-      setStatus('fetching');
       setLogs((prev) => [
         ...prev,
         {
@@ -260,17 +190,14 @@ export default function GoogleSheetImportStoryboard() {
         }
       ]);
     } else if (stepNumber === 2) {
-      setStatus('parsing');
-
       const totalCount = sheetRows.length;
       const allNormalized = sheetRows.map((r) => formatSmartRecruitersPayload(r));
 
-      // Truncate records payload if it exceeds 20 rows
-      const maxPreviewRows = 3;
-      const displayedRecords = totalCount > maxPreviewRows
+      // Truncate preview payload if row count exceeds 20
+      const displayedRecords = totalCount > 20 
         ? [
-            ...allNormalized.slice(0, maxPreviewRows),
-            `... [${totalCount - maxPreviewRows} additional candidate records truncated for preview]`
+            ...allNormalized.slice(0, 20),
+            `... [${totalCount - 20} additional candidate records truncated for preview]`
           ]
         : allNormalized;
 
@@ -280,8 +207,8 @@ export default function GoogleSheetImportStoryboard() {
           id: Date.now(),
           time,
           title: 'Data Extraction & Schema Mapping',
-          details: totalCount > maxPreviewRows
-            ? `Extracted ${totalCount} sheet rows. Showing first ${maxPreviewRows} normalized candidate payloads.`
+          details: totalCount > 20 
+            ? `Extracted ${totalCount} sheet rows. Showing first 20 normalized candidate payloads.`
             : 'Backend worker extracted raw sheet rows and formatted them into SmartRecruiters OpenAPI Candidate objects.',
           payload: {
             mappedFields: EXPECTED_HEADERS,
@@ -337,10 +264,7 @@ export default function GoogleSheetImportStoryboard() {
     }
   };
 
-  const handleRunStep = () => {
-    if (isCompleted) return;
-    executeStep(currentStep + 1);
-  };
+  const handleRunStep = () => !isCompleted && executeStep(currentStep + 1);
 
   const handleToggleRunAll = () => {
     if (isCompleted) return;
@@ -354,19 +278,17 @@ export default function GoogleSheetImportStoryboard() {
 
   return (
     <div className="sr-main-split">
-      {/* LEFT PANEL: Live Google Sheet Data View */}
+      {/* LEFT PANEL: Google Sheet Table Viewer */}
       <section className="sr-panel sr-panel-left">
         <div className="sr-panel-content" style={{ maxWidth: '640px' }}>
           <div className="sr-section-header">
             <span className="sr-badge sr-badge-blue">Live Google Sheet Source</span>
             <h2 className="sr-title">Batch Candidate Sourcing</h2>
-            <p className="sr-subtitle">
-              Previewing records directly from the linked Google Sheet.
-            </p>
+            <p className="sr-subtitle">Previewing records directly from the linked Google Sheet.</p>
           </div>
 
           <form onSubmit={handleImportSubmit} className="sr-card">
-            {/* Spreadsheet Header & External Link */}
+            {/* Header & External Link */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--sr-color-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div className="sr-icon-wrapper-primary" style={{ backgroundColor: '#107c41' }}>
@@ -398,13 +320,13 @@ export default function GoogleSheetImportStoryboard() {
               </div>
             )}
 
-            {/* Formatted Data Table View (Scrollable after ~10 rows) */}
+            {/* Formatted Data Table View (Scrollable Max 10 rows) */}
             <div 
               style={{ 
                 marginBottom: '1.25rem', 
                 overflowX: 'auto', 
                 overflowY: 'auto',
-                maxHeight: '380px', // Restricts height to ~10 rows + header
+                maxHeight: '380px',
                 borderRadius: 'var(--sr-radius-md)', 
                 border: '1px solid var(--sr-color-border)' 
               }}
@@ -416,7 +338,6 @@ export default function GoogleSheetImportStoryboard() {
                 </div>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
-                  {/* Sticky Header keeps table headers visible while scrolling */}
                   <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                     <tr style={{ backgroundColor: 'var(--sr-color-bg-surface)', borderBottom: '1px solid var(--sr-color-border)' }}>
                       <th style={{ padding: '0.5rem 0.75rem', textAlign: 'left', color: 'var(--sr-color-text-muted)', fontWeight: 600, backgroundColor: 'var(--sr-color-bg-surface)' }}>#</th>
@@ -464,117 +385,19 @@ export default function GoogleSheetImportStoryboard() {
         </div>
       </section>
 
-      {/* RIGHT PANEL: API Inspector */}
-      <section 
-        className="sr-panel sr-panel-right" 
-        style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          height: '100%', 
-          overflow: 'hidden',
-          paddingBottom: '1.5rem'
-        }}
-      >
-        {/* Header */}
-        <div className="sr-section-header" style={{ marginBottom: '1rem', flexShrink: 0 }}>
-          <span className="sr-badge sr-badge-green">Backend Processing Hub</span>
-          <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>Sheet ETL ➔ SmartRecruiters API</h2>
-          <p className="sr-subtitle" style={{ marginTop: '0.25rem' }}>
-            Observe how spreadsheet rows are transformed into discrete OpenAPI POST requests.
-          </p>
-        </div>
-
-        {/* Scrollable Timeline */}
-        <div 
-          ref={timelineRef}
-          className="sr-log-timeline" 
-          style={{ 
-            flex: 1, 
-            overflowY: 'auto', 
-            paddingRight: '0.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem'
-          }}
-        >
-          {logs.length === 0 ? (
-            <div className="sr-empty-state">
-              <ArrowLeftCircleIcon className="sr-icon-lg sr-pulse" />
-              <p>Click "Start Google Sheet Import" on the left or "Run step" below to trigger the worker.</p>
-            </div>
-          ) : (
-            logs.map((log) => (
-              <div key={log.id} className={`sr-log-card sr-log-${log.statusType}`}>
-                <div className="sr-log-header">
-                  <div className="sr-log-title-group">
-                    {log.statusType === 'success' ? (
-                      <CheckCircle2 className="sr-icon-sm sr-text-success" />
-                    ) : log.statusType === 'action' ? (
-                      <UserCheck className="sr-icon-sm sr-text-blue" />
-                    ) : (
-                      <Workflow className="sr-icon-sm sr-text-purple" />
-                    )}
-                    <h3 className="sr-log-title">{log.title}</h3>
-                  </div>
-                  <span className="sr-log-time">{log.time}</span>
-                </div>
-
-                <p className="sr-log-details">{log.details}</p>
-
-                {log.payload && (
-                  <div className="sr-code-block">
-                    <pre>{JSON.stringify(log.payload, null, 2)}</pre>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* PINNED ACTION BAR AT THE BOTTOM */}
-        <div 
-          style={{ 
-            marginTop: '1rem', 
-            paddingTop: '1rem', 
-            borderTop: '1px solid var(--sr-color-border)', 
-            display: 'flex', 
-            justify: 'flex-end', 
-            gap: '0.75rem',
-            flexShrink: 0
-          }}
-        >
-          <button
-            type="button"
-            onClick={handleRunStep}
-            disabled={isCompleted || isRunningAll || isLoading}
-            className={`sr-btn ${!isCompleted && !isRunningAll && !isLoading ? 'sr-btn-secondary' : 'sr-btn-disabled'}`}
-            title="Execute next step"
-          >
-            <StepForward className="sr-icon-sm" />
-            <span>Run step</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleToggleRunAll}
-            disabled={isCompleted || isLoading}
-            className={`sr-btn ${!isCompleted && !isLoading ? (isRunningAll ? 'sr-btn-secondary' : 'sr-btn-primary') : 'sr-btn-disabled'}`}
-            title={isRunningAll ? 'Pause execution' : 'Run all steps'}
-          >
-            {isRunningAll ? (
-              <>
-                <Pause className="sr-icon-sm" />
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <Play className="sr-icon-sm" />
-                <span>Run all</span>
-              </>
-            )}
-          </button>
-        </div>
-      </section>
+      {/* REUSABLE CONSOLIDATED RIGHT PANEL */}
+      <InspectorPanel
+        badgeText="Backend Processing Hub"
+        title="Sheet ETL ➔ SmartRecruiters API"
+        subtitle="Observe how spreadsheet rows are transformed into discrete OpenAPI POST requests."
+        emptyMessage="Click 'Start Google Sheet Import' on the left or 'Run step' below to trigger the worker."
+        logs={logs}
+        isCompleted={isCompleted}
+        isRunningAll={isRunningAll}
+        isLoading={isLoading}
+        onRunStep={handleRunStep}
+        onToggleRunAll={handleToggleRunAll}
+      />
     </div>
   );
 }

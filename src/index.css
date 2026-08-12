@@ -484,3 +484,18 @@
   color: var(--sr-color-text-muted);
   text-align: center;
 }
+
+/* Remove default browser margins and set dark mode at the root level */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #121212; /* Replace with your app's dark mode background color */
+  color: #ffffff; /* Default text color for dark mode */
+}
+
+/* Ensure the root container takes full height */
+#root, #__next {
+  min-height: 100vh;
+}
