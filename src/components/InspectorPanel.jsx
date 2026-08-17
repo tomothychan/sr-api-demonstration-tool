@@ -1,16 +1,14 @@
-// src/components/InspectorPanel.jsx
 import React, { useEffect, useRef } from 'react';
 import { 
   CheckCircle2, 
   UserCheck, 
-  Database, 
   Workflow, 
   ArrowLeftCircleIcon, 
   Play, 
   Pause, 
   StepForward 
 } from 'lucide-react';
-import { smoothScrollTo } from './scroll';
+import { smoothScrollTo } from './Scroll';
 
 export default function InspectorPanel({
   badgeText = "Behind the Scenes (API Inspector)",
@@ -36,7 +34,6 @@ export default function InspectorPanel({
     }
   }, [logs]);
 
-  // Helper to render icon based on log type
   const renderLogIcon = (statusType) => {
     if (statusType === 'success') return <CheckCircle2 className="sr-icon-sm sr-text-success" />;
     if (statusType === 'action') return <UserCheck className="sr-icon-sm sr-text-blue" />;
@@ -54,14 +51,14 @@ export default function InspectorPanel({
         paddingBottom: '1.5rem'
       }}
     >
-      {/* Header */}
+      {/* Panel Header */}
       <div className="sr-section-header" style={{ marginBottom: '1rem', flexShrink: 0 }}>
         <span className={`sr-badge ${badgeColorClass}`}>{badgeText}</span>
         <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>{title}</h2>
         <p className="sr-subtitle" style={{ marginTop: '0.25rem' }}>{subtitle}</p>
       </div>
 
-      {/* Scrollable Timeline */}
+      {/* API Logs Timeline */}
       <div 
         ref={timelineRef}
         className="sr-log-timeline"
@@ -102,12 +99,12 @@ export default function InspectorPanel({
         )}
       </div>
 
-      {/* PINNED ACTION BAR AT THE BOTTOM */}
+      {/* Pinned Action Control Bar */}
       <div 
         style={{ 
           marginTop: '1rem', 
           paddingTop: '1rem', 
-          borderTop: '1px solid var(--sr-color-border)', 
+          borderTop: '1px solid var(--sr-color-border, #334155)', 
           display: 'flex', 
           justify: 'flex-end', 
           gap: '0.75rem',

@@ -125,7 +125,6 @@
 }
 
 .sr-panel {
-  flex: 1;
   padding: 2rem;
   overflow-y: auto;
   box-sizing: border-box;
@@ -133,6 +132,7 @@
 }
 
 .sr-panel-left {
+  flex: 0 0 60%;
   background-color: var(--sr-color-bg-base);
   border-right: 1px solid var(--sr-color-border);
   display: flex;
@@ -140,6 +140,7 @@
 }
 
 .sr-panel-right {
+  flex: 0 0 40%;
   background-color: var(--sr-color-bg-panel-dark);
   display: flex;
   flex-direction: column;
