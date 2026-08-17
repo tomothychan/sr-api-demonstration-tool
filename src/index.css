@@ -62,6 +62,10 @@
   
   --sr-color-code-bg: #090d16;
   --sr-color-code-text: #e2e8f0;
+
+  --scrollbar-color-bg: #121212
+  --color-scrollbar-thumb: #333333;
+  --color-scrollbar-hover: #555555;
 }
 
 /* Base App Layout */
@@ -498,4 +502,20 @@ html, body {
 /* Ensure the root container takes full height */
 #root, #__next {
   min-height: 100vh;
+}
+
+* {
+  scrollbar-color: var(--color-scrollbar-thumb) var(--scrollbar-color-bg);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-hover);
 }
