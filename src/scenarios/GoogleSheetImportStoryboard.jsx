@@ -21,7 +21,6 @@ export default function GoogleSheetImportStoryboard() {
     'degree', 'major', 'eduStartDate', 'eduEndDate'
   ];
 
-  // 4 Nodes: Source Sheet -> ETL Pipeline -> Batch API Gateway -> SmartRecruiters Core
   const FLOW_NODES = [
     { id: 'sheet', label: 'Google Sheets', sublabel: 'Source CSV Stream', icon: 'sheet', activeSteps: [1] },
     { id: 'worker', label: 'ETL Pipeline', sublabel: 'Parser & Normalizer', icon: 'workflow', activeSteps: [2] },
@@ -180,7 +179,6 @@ export default function GoogleSheetImportStoryboard() {
     const time = new Date().toLocaleTimeString();
 
     if (stepNumber === 1) {
-      // Packet 1: Google Sheet -> ETL Pipeline
       setActivePacket({ fromNode: 'sheet', label: 'CSV Stream', key: `pkt-1-${Date.now()}` });
       setLogs((prev) => [
         ...prev,
@@ -199,7 +197,6 @@ export default function GoogleSheetImportStoryboard() {
         }
       ]);
     } else if (stepNumber === 2) {
-      // Packet 2: ETL Pipeline -> Batch API Gateway
       setActivePacket({ fromNode: 'worker', label: 'Batch JSON', key: `pkt-2-${Date.now()}` });
       const totalCount = sheetRows.length;
       const allNormalized = sheetRows.map((r) => formatSmartRecruitersPayload(r));
@@ -229,7 +226,6 @@ export default function GoogleSheetImportStoryboard() {
         }
       ]);
     } else {
-      // Step 3 and beyond: Repeated Packets from Batch API Gateway -> SmartRecruiters Core
       const rowIndex = stepNumber - 3;
       const targetRow = sheetRows[rowIndex];
       const isFinalRow = rowIndex === sheetRows.length - 1;
@@ -238,7 +234,7 @@ export default function GoogleSheetImportStoryboard() {
         const srPayload = formatSmartRecruitersPayload(targetRow);
         const targetJobId = targetRow.jobId || targetRow['Job ID'] || 'job-7712';
 
-        // Dispatches packet animation between Node 3 (dispatcher) and Node 4 (sr_core) for each row
+        // Unique key forces React to unmount and remount packet div, triggering CSS animation every row step
         setActivePacket({ 
           fromNode: 'dispatcher', 
           label: `POST Row ${targetRow.id}`, 
@@ -430,7 +426,7 @@ export default function GoogleSheetImportStoryboard() {
           </div>
 
           {/* Section 3: Live Database Sync */}
-          <div style={{ paddingBottom: '2rem' }}>
+          <div className="sr-section-padded">
             <div className="sr-subheading-group">
               <Database size={18} style={{ color: '#10b981' }} />
               <h3 className="sr-subheading-title">
