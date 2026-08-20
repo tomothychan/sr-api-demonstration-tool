@@ -11,7 +11,7 @@ export default function WebhookSubscriptionStoryboard() {
     { id: 'sr_engine', label: 'SmartRecruiters', sublabel: 'Webhook Engine', icon: 'workflow', col: 1, stepStates: ['inactive', 'active', 'completed', 'active', 'completed', 'completed'] },
     { id: 'company_server', label: 'Company Server', sublabel: 'Webhook Listener', icon: 'server', col: 2, stepStates: ['inactive', 'active', 'completed', 'completed', 'updated', 'completed'] },
     { id: 'company_db', label: 'Company DB', sublabel: 'Applicants Table', icon: 'database', col: 3, stepStates: ['inactive', 'inactive', 'inactive', 'inactive', 'updated', 'completed'] },
-    { id: 'bg_agency', label: 'BG Check Agency', sublabel: 'Checkr / Sterling API', icon: 'globe', col: 3, stepStates: ['inactive', 'inactive', 'inactive', 'inactive', 'inactive', 'active'] }
+    { id: 'bg_agency', label: 'BG Check Agency', sublabel: 'Checkr / Sterling API', icon: 'globe', col: 3, stepStates: ['inactive', 'inactive', 'inactive', 'inactive', 'inactive', 'updated'] }
   ];
 
   const FLOW_EDGES = [
@@ -212,7 +212,7 @@ export default function WebhookSubscriptionStoryboard() {
             <div className="sr-section-header">
               <span className="sr-badge sr-badge-blue">Event Driven Integration</span>
               <h2 className="sr-title">Webhook & Automated Screening</h2>
-              <p className="sr-subtitle">Subscribe to SmartRecruiters webhooks, update internal DB, and trigger automated screening workflows.</p>
+              <p className="sr-subtitle">Simulates an event-driven integration where a company server registers a webhook listener with SmartRecruiters. Upon receiving a real-time candidate.application.created notification, the server executes parallel downstream workflows to insert the new applicant into an internal company database and dispatch an automated background check request to an external screening agency.</p>
             </div>
 
             <form onSubmit={handleStartSimulation} className="sr-card sr-form">

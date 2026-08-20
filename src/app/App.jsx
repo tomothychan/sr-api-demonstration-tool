@@ -35,7 +35,7 @@ export default function ApiStoryboardApp() {
     { id: 'hired-webhook', number: '02', label: 'SuccessFactors Handoff' },
     { id: 'gsheet-import', number: '03', label: 'Google Sheet Batch Sourcing' },
     { id: 'webhook-subscription', number: '04', label: 'Webhook & Automated Screening' },
-    { id: 'self-scheduling', number: '05', label: 'Auto Self-Scheduling' }
+    { id: 'empty-tab', number: '05', label: 'Empty Tab' }
   ];
 
   return (
@@ -67,10 +67,10 @@ export default function ApiStoryboardApp() {
           <WebhookSubscriptionStoryboard key={resetKey} />
         )}
 
-        {activeTab === 'self-scheduling' && (
+        {activeTab === 'empty-tab' && (
           <div className="sr-empty-state-tab">
-            <h2>Auto Self-Scheduling Scenario</h2>
-            <p>Ready to build: Real-time calendar availability lookup & booking API workflow.</p>
+            <h2>Empty Tab</h2>
+            <p>Ready to build: A new scenario of your own!</p>
           </div>
         )}
       </main>

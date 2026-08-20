@@ -144,7 +144,7 @@ export default function SuccessFactorsHandoffStoryboard() {
             <div className="sr-section-header">
               <span className="sr-badge sr-badge-blue">Front-End Experience</span>
               <h2 className="sr-title">Offer Accepted & Hiring Action</h2>
-              <p className="sr-subtitle">Customize candidate data, then run the simulation to inspect the API payloads.</p>
+              <p className="sr-subtitle">Illustrates the enterprise onboarding pipeline triggered when a recruiter updates a candidate's status to HIRED in the ATS. SmartRecruiters emits a real-time candidate.hired webhook event to SAP CPI middleware, which transforms the offer and compensation payload into OData API schema and provisions a new profile in the SAP SuccessFactors Employee Central queue.</p>
             </div>
 
             <form onSubmit={handleHiredSimulationSubmit} className="sr-card">

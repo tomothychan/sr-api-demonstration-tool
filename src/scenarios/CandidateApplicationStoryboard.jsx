@@ -136,7 +136,7 @@ export default function CandidateApplicationStoryboard() {
             <div className="sr-section-header">
               <span className="sr-badge sr-badge-blue">Front-End Experience</span>
               <h2 className="sr-title">Career Site Application</h2>
-              <p className="sr-subtitle">Simulate how a job seeker interacts with your custom front-end portal.</p>
+              <p className="sr-subtitle">Simulates a job seeker submitting an application through a custom career portal front-end. This scenario models the full intake pipeline as candidate inputs are transformed into SmartRecruiters Open Web API JSON, checked against backend endpoints for duplicate email records, and committed to the SmartRecruiters candidate database via the SmartRecruiters API.</p>
             </div>
 
             <form onSubmit={handleFormSubmit} className="sr-card sr-form">

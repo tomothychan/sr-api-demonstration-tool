@@ -319,7 +319,7 @@ export default function GoogleSheetImportStoryboard() {
             <div className="sr-section-header">
               <span className="sr-badge sr-badge-blue">Live Google Sheet Source</span>
               <h2 className="sr-title">Batch Candidate Sourcing</h2>
-              <p className="sr-subtitle">Previewing records directly from the linked Google Sheet.</p>
+              <p className="sr-subtitle">Demonstrates an automated ETL sourcing pipeline that connects directly to a live Google Sheet CSV stream. The backend worker parses and normalizes raw applicant rows across twelve custom fields, then routes the batch payloads through a gateway dispatcher to sequentially post each candidate record into the SmartRecruiters API.</p>
             </div>
 
             <form onSubmit={handleImportSubmit} className="sr-card">

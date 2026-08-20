@@ -63,9 +63,9 @@
   --sr-color-code-bg: #090d16;
   --sr-color-code-text: #e2e8f0;
 
-  --scrollbar-color-bg: #121212
-  --color-scrollbar-thumb: #333333;
-  --color-scrollbar-hover: #555555;
+  --scrollbar-color-bg: #121212;
+  --scrollbar-color-thumb: #333333;
+  --scrollbar-color-hover: #555555;
 }
 
 /* Base App Layout */
@@ -509,12 +509,14 @@ html, body {
   scrollbar-color: var(--color-scrollbar-thumb) var(--scrollbar-color-bg);
 }
 
+
 ::-webkit-scrollbar-track {
-  background: var(--scrollbar-color-bg);
+  background: var(--scrollb-bg);
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-scrollbar-thumb);
+  border-radius: 40px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
