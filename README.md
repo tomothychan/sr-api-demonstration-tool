@@ -21,7 +21,7 @@ An interactive, dark-mode React application designed to simulate and demonstrate
 
 1. **Clone the Repository**
 ```bash
-git clone [https://github.com/tomothychan/sr-api-demonstration-tool.git](https://github.com/tomothychan/sr-api-demonstration-tool.git)
+git clone https://github.com/tomothychan/sr-api-demonstration-tool.git
 cd sr-api-demonstration-tool
 ```
 
