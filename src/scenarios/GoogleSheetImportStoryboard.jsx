@@ -21,11 +21,12 @@ export default function GoogleSheetImportStoryboard() {
     'degree', 'major', 'eduStartDate', 'eduEndDate'
   ];
 
+  // 4 Nodes: Source Sheet -> ETL Pipeline -> Batch API Gateway -> SmartRecruiters Core
   const FLOW_NODES = [
     { id: 'sheet', label: 'Google Sheets', sublabel: 'Source CSV Stream', icon: 'sheet', activeSteps: [1] },
     { id: 'worker', label: 'ETL Pipeline', sublabel: 'Parser & Normalizer', icon: 'workflow', activeSteps: [2] },
-    { id: 'sr_api', label: 'SmartRecruiters API', sublabel: 'Batch Ingestion', icon: 'server', activeSteps: Array.from({ length: 50 }, (_, i) => i + 3) },
-    { id: 'sr_db', label: 'Candidate DB', sublabel: 'PostgreSQL Database', icon: 'database', activeSteps: Array.from({ length: 50 }, (_, i) => i + 3) }
+    { id: 'dispatcher', label: 'Batch API Gateway', sublabel: 'Request Dispatcher', icon: 'server', activeSteps: [2, ...Array.from({ length: 100 }, (_, i) => i + 3)] },
+    { id: 'sr_core', label: 'SmartRecruiters Core', sublabel: 'OpenAPI & Database', icon: 'database', activeSteps: Array.from({ length: 100 }, (_, i) => i + 3) }
   ];
 
   const DB_COLUMNS = [
@@ -179,7 +180,8 @@ export default function GoogleSheetImportStoryboard() {
     const time = new Date().toLocaleTimeString();
 
     if (stepNumber === 1) {
-      setActivePacket({ fromNode: 'sheet', label: 'CSV Stream' });
+      // Packet 1: Google Sheet -> ETL Pipeline
+      setActivePacket({ fromNode: 'sheet', label: 'CSV Stream', key: `pkt-1-${Date.now()}` });
       setLogs((prev) => [
         ...prev,
         {
@@ -197,7 +199,8 @@ export default function GoogleSheetImportStoryboard() {
         }
       ]);
     } else if (stepNumber === 2) {
-      setActivePacket({ fromNode: 'worker', label: 'JSON Batch' });
+      // Packet 2: ETL Pipeline -> Batch API Gateway
+      setActivePacket({ fromNode: 'worker', label: 'Batch JSON', key: `pkt-2-${Date.now()}` });
       const totalCount = sheetRows.length;
       const allNormalized = sheetRows.map((r) => formatSmartRecruitersPayload(r));
 
@@ -226,6 +229,7 @@ export default function GoogleSheetImportStoryboard() {
         }
       ]);
     } else {
+      // Step 3 and beyond: Repeated Packets from Batch API Gateway -> SmartRecruiters Core
       const rowIndex = stepNumber - 3;
       const targetRow = sheetRows[rowIndex];
       const isFinalRow = rowIndex === sheetRows.length - 1;
@@ -234,7 +238,12 @@ export default function GoogleSheetImportStoryboard() {
         const srPayload = formatSmartRecruitersPayload(targetRow);
         const targetJobId = targetRow.jobId || targetRow['Job ID'] || 'job-7712';
 
-        setActivePacket({ fromNode: 'sr_api', label: `INSERT Row ${targetRow.id}` });
+        // Dispatches packet animation between Node 3 (dispatcher) and Node 4 (sr_core) for each row
+        setActivePacket({ 
+          fromNode: 'dispatcher', 
+          label: `POST Row ${targetRow.id}`, 
+          key: `pkt-row-${targetRow.id}-${Date.now()}` 
+        });
 
         setDbRecords((prev) => [
           ...prev,
@@ -407,9 +416,9 @@ export default function GoogleSheetImportStoryboard() {
 
           {/* Section 2: Node Data Flow */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <div className="sr-subheading-group">
               <Network size={18} style={{ color: '#3b82f6' }} />
-              <h3 style={{ margin: 0, fontSize: '0.925rem', fontWeight: 600, color: 'var(--sr-color-text-main, #f8fafc)' }}>
+              <h3 className="sr-subheading-title">
                 System Node Architecture
               </h3>
             </div>
@@ -422,9 +431,9 @@ export default function GoogleSheetImportStoryboard() {
 
           {/* Section 3: Live Database Sync */}
           <div style={{ paddingBottom: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <div className="sr-subheading-group">
               <Database size={18} style={{ color: '#10b981' }} />
-              <h3 style={{ margin: 0, fontSize: '0.925rem', fontWeight: 600, color: 'var(--sr-color-text-main, #f8fafc)' }}>
+              <h3 className="sr-subheading-title">
                 SmartRecruiters DB Sync
               </h3>
             </div>

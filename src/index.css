@@ -520,3 +520,24 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-scrollbar-hover);
 }
+
+/* Section wrapper with bottom scroll clearance */
+.sr-section-padded {
+  padding-bottom: 2rem;
+}
+
+/* Sub-heading row container (Icon + Title) */
+.sr-subheading-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Sub-heading title text */
+.sr-subheading-title {
+  margin: 0;
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--sr-color-text-main, #f8fafc);
+}

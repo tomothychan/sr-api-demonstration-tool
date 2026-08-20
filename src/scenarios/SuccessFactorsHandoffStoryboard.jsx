@@ -174,9 +174,9 @@ export default function SuccessFactorsHandoffStoryboard() {
 
           {/* Section 2: Node Data Flow */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <div className="sr-subheading-group">
               <Network size={18} style={{ color: '#3b82f6' }} />
-              <h3 style={{ margin: 0, fontSize: '0.925rem', fontWeight: 600, color: 'var(--sr-color-text-main, #f8fafc)' }}>
+              <h3 className="sr-subheading-title">
                 System Node Architecture
               </h3>
             </div>
@@ -189,9 +189,9 @@ export default function SuccessFactorsHandoffStoryboard() {
 
           {/* Section 3: Live Database Sync */}
           <div style={{ paddingBottom: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <div className="sr-subheading-group">
               <Database size={18} style={{ color: '#10b981' }} />
-              <h3 style={{ margin: 0, fontSize: '0.925rem', fontWeight: 600, color: 'var(--sr-color-text-main, #f8fafc)' }}>
+              <h3 className="sr-subheading-title">
                 SuccessFactors EC DB Sync
               </h3>
             </div>
