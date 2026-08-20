@@ -8,10 +8,10 @@ export default function SuccessFactorsHandoffStoryboard() {
   const TOTAL_STEPS = 4;
 
   const FLOW_NODES = [
-    { id: 'ats', label: 'SmartRecruiters ATS', sublabel: 'Recruiter UI', icon: 'globe', activeSteps: [1] },
-    { id: 'event_bus', label: 'Event Bus', sublabel: 'candidate.hired Webhook', icon: 'workflow', activeSteps: [2] },
-    { id: 'cpi', label: 'SAP CPI Middleware', sublabel: 'OData Transformation', icon: 'server', activeSteps: [3, 4] },
-    { id: 'sf_db', label: 'SuccessFactors EC', sublabel: 'Pending Hires Queue', icon: 'database', activeSteps: [4] }
+    { id: 'ats', label: 'SmartRecruiters ATS', sublabel: 'Recruiter UI', icon: 'globe', stepStates: ['inactive', 'active', 'completed', 'completed', 'completed'] },
+    { id: 'event_bus', label: 'Event Bus', sublabel: 'candidate.hired Webhook', icon: 'workflow', stepStates: ['inactive', 'inactive', 'active', 'completed', 'completed'] },
+    { id: 'cpi', label: 'SAP CPI Middleware', sublabel: 'OData Transformation', icon: 'server', stepStates: ['inactive', 'inactive', 'inactive', 'active', 'completed'] },
+    { id: 'sf_db', label: 'SuccessFactors EC', sublabel: 'Pending Hires Queue', icon: 'database', stepStates: ['inactive', 'inactive', 'inactive', 'inactive', 'updated'] }
   ];
 
   const DB_COLUMNS = [
@@ -57,7 +57,7 @@ export default function SuccessFactorsHandoffStoryboard() {
     const time = new Date().toLocaleTimeString();
 
     if (stepNumber === 1) {
-      setActivePacket({ fromNode: 'ats', label: 'Status: HIRED' });
+      setActivePacket({ fromNode: 'ats', toNode: 'event_bus', label: 'Status: HIRED', key: `pkt-1-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'Recruiter Action: Candidate Status Updated to HIRED',
@@ -65,7 +65,7 @@ export default function SuccessFactorsHandoffStoryboard() {
         payload: null, statusType: 'action'
       }]);
     } else if (stepNumber === 2) {
-      setActivePacket({ fromNode: 'event_bus', label: 'candidate.hired Webhook' });
+      setActivePacket({ fromNode: 'event_bus', toNode: 'cpi', label: 'candidate.hired Webhook', key: `pkt-2-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'SmartRecruiters Event: candidate.hired (Webhook)',
@@ -74,7 +74,7 @@ export default function SuccessFactorsHandoffStoryboard() {
         statusType: 'process'
       }]);
     } else if (stepNumber === 3) {
-      setActivePacket({ fromNode: 'cpi', label: 'EmpEmployment OData' });
+      setActivePacket({ fromNode: 'cpi', toNode: 'sf_db', label: 'EmpEmployment OData', key: `pkt-3-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'SAP CPI Middleware: Field Transformation & OData Mapping',
@@ -83,7 +83,7 @@ export default function SuccessFactorsHandoffStoryboard() {
         statusType: 'process'
       }]);
     } else if (stepNumber === 4) {
-      setActivePacket({ fromNode: 'cpi', label: 'INSERT Pending Hire' });
+    setActivePacket({ fromNode: 'cpi', toNode: 'sf_db', label: 'INSERT Pending Hire', color: '#10b981', key: `pkt-4-${Date.now()}` });
 
       setDbRecords([
         {

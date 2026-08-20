@@ -8,10 +8,16 @@ export default function WebhookSubscriptionStoryboard() {
   const TOTAL_STEPS = 5;
 
   const FLOW_NODES = [
-    { id: 'sr_engine', label: 'SmartRecruiters', sublabel: 'Webhook Engine', icon: 'workflow', activeSteps: [1, 2, 3] },
-    { id: 'company_server', label: 'Company Server', sublabel: 'Webhook Listener', icon: 'server', activeSteps: [1, 2, 3, 4, 5] },
-    { id: 'company_db', label: 'Company DB', sublabel: 'Applicants Table', icon: 'database', activeSteps: [4] },
-    { id: 'bg_agency', label: 'BG Check Agency', sublabel: 'Checkr / Sterling API', icon: 'globe', activeSteps: [5] }
+    { id: 'sr_engine', label: 'SmartRecruiters', sublabel: 'Webhook Engine', icon: 'workflow', col: 1, stepStates: ['inactive', 'active', 'completed', 'active', 'completed', 'completed'] },
+    { id: 'company_server', label: 'Company Server', sublabel: 'Webhook Listener', icon: 'server', col: 2, stepStates: ['inactive', 'active', 'completed', 'completed', 'updated', 'completed'] },
+    { id: 'company_db', label: 'Company DB', sublabel: 'Applicants Table', icon: 'database', col: 3, stepStates: ['inactive', 'inactive', 'inactive', 'inactive', 'updated', 'completed'] },
+    { id: 'bg_agency', label: 'BG Check Agency', sublabel: 'Checkr / Sterling API', icon: 'globe', col: 3, stepStates: ['inactive', 'inactive', 'inactive', 'inactive', 'inactive', 'active'] }
+  ];
+
+  const FLOW_EDGES = [
+    { from: 'sr_engine', to: 'company_server' },
+    { from: 'company_server', to: 'company_db' },
+    { from: 'company_server', to: 'bg_agency' }
   ];
 
   const DB_COLUMNS = [
@@ -53,7 +59,7 @@ export default function WebhookSubscriptionStoryboard() {
 
     if (stepNumber === 1) {
       // Step 1: Company Server -> SmartRecruiters (Outbound Subscription Request)
-      setActivePacket({ fromNode: 'company_server', toNode: 'sr_engine', label: 'POST /webhooks', direction: 'reverse' });
+      setActivePacket({ fromNode: 'company_server', toNode: 'sr_engine', label: 'POST /webhooks', key: `pkt-1-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'Step 1: Outbound Subscription Request (Company -> SR)',
@@ -68,7 +74,7 @@ export default function WebhookSubscriptionStoryboard() {
       }]);
     } else if (stepNumber === 2) {
       // Step 2: SmartRecruiters -> Company Server (Subscription Acceptance)
-      setActivePacket({ fromNode: 'sr_engine', toNode: 'company_server', label: '201 Sub Accepted', direction: 'normal' });
+      setActivePacket({ fromNode: 'sr_engine', toNode: 'company_server', label: '201 Sub Accepted', key: `pkt-2-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'Step 2: Webhook Subscription Acceptance (SR -> Company)',
@@ -83,7 +89,7 @@ export default function WebhookSubscriptionStoryboard() {
       }]);
     } else if (stepNumber === 3) {
       // Step 3: SmartRecruiters -> Company Server (New Applicant Notification)
-      setActivePacket({ fromNode: 'sr_engine', toNode: 'company_server', label: 'Applicant Notification', direction: 'normal' });
+      setActivePacket({ fromNode: 'sr_engine', toNode: 'company_server', label: 'Applicant Notification', key: `pkt-3-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: `Step 3: New Applicant Notification Received (SR -> Company)`,
@@ -102,7 +108,7 @@ export default function WebhookSubscriptionStoryboard() {
       }]);
     } else if (stepNumber === 4) {
       // Step 4: Company Server -> Company DB (Branch 1: Update Company DB)
-      setActivePacket({ fromNode: 'company_server', toNode: 'company_db', label: 'INSERT Candidate Row' });
+      setActivePacket({ fromNode: 'company_server', toNode: 'company_db', label: 'INSERT Candidate Row', key: `pkt-4-${Date.now()}` });
 
       setDbRecords([
         {
@@ -134,7 +140,7 @@ export default function WebhookSubscriptionStoryboard() {
       }]);
     } else if (stepNumber === 5) {
       // Step 5: Company Server -> BG Check Agency (Branch 2: Contact Agency)
-      setActivePacket({ fromNode: 'company_server', toNode: 'bg_agency', label: 'POST /checkr/orders' });
+      setActivePacket({ fromNode: 'company_server', toNode: 'bg_agency', label: 'POST /checkr/orders', color: '#f59e0b', key: `pkt-5-${Date.now()}` });
 
       setDbRecords([
         {
@@ -275,9 +281,9 @@ export default function WebhookSubscriptionStoryboard() {
             </div>
             <NodeDataFlowDiagram 
               nodes={FLOW_NODES} 
+              edges={FLOW_EDGES}
               activeStep={currentStep} 
               activePacket={activePacket} 
-              layout="branched"
             />
           </div>
 

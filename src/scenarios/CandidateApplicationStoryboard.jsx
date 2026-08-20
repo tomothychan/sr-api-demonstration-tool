@@ -8,10 +8,10 @@ export default function CandidateApplicationStoryboard() {
   const TOTAL_STEPS = 4;
 
   const FLOW_NODES = [
-    { id: 'client', label: 'Career Portal', sublabel: 'React Front-End', icon: 'globe', activeSteps: [1] },
-    { id: 'wrapper', label: 'API Wrapper', sublabel: 'Data Mapper', icon: 'workflow', activeSteps: [2] },
-    { id: 'sr_api', label: 'SmartRecruiters', sublabel: 'Open Web API', icon: 'server', activeSteps: [3, 4] },
-    { id: 'sr_db', label: 'Candidate DB', sublabel: 'PostgreSQL', icon: 'database', activeSteps: [4] }
+    { id: 'client', label: 'Career Portal', sublabel: 'React Front-End', icon: 'globe', stepStates: ['inactive', 'active', 'completed', 'completed', 'completed'] },
+    { id: 'wrapper', label: 'API Wrapper', sublabel: 'Data Mapper', icon: 'workflow', stepStates: ['inactive', 'inactive', 'active', 'completed', 'completed'] },
+    { id: 'sr_api', label: 'SmartRecruiters', sublabel: 'Open Web API', icon: 'server', stepStates: ['inactive', 'inactive', 'inactive', 'active', 'completed'] },
+    { id: 'sr_db', label: 'Candidate DB', sublabel: 'PostgreSQL', icon: 'database', stepStates: ['inactive', 'inactive', 'inactive', 'inactive', 'updated'] }
   ];
 
   const DB_COLUMNS = [
@@ -50,7 +50,7 @@ export default function CandidateApplicationStoryboard() {
     const time = new Date().toLocaleTimeString();
 
     if (stepNumber === 1) {
-      setActivePacket({ fromNode: 'client', label: 'Form Payload' });
+      setActivePacket({ fromNode: 'client', toNode: 'wrapper', label: 'Form Payload', key: `pkt-1-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'Client Action: Form Submitted',
@@ -58,7 +58,7 @@ export default function CandidateApplicationStoryboard() {
         payload: null, statusType: 'action'
       }]);
     } else if (stepNumber === 2) {
-      setActivePacket({ fromNode: 'wrapper', label: 'OpenAPI JSON' });
+      setActivePacket({ fromNode: 'wrapper', toNode: 'sr_api', label: 'OpenAPI JSON', key: `pkt-2-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'Data Transformation: Resume & Profile Parsing',
@@ -67,7 +67,7 @@ export default function CandidateApplicationStoryboard() {
         statusType: 'process'
       }]);
     } else if (stepNumber === 3) {
-      setActivePacket({ fromNode: 'sr_api', label: 'Dedup Check' });
+      setActivePacket({ fromNode: 'sr_db', toNode: 'sr_api', label: 'Dedup Check', key: `pkt-3-${Date.now()}` });
       setLogs((prev) => [...prev, {
         id: Date.now(), time,
         title: 'API Pre-Check: Email Deduplication Anchoring',
@@ -76,7 +76,7 @@ export default function CandidateApplicationStoryboard() {
         statusType: 'process'
       }]);
     } else if (stepNumber === 4) {
-      setActivePacket({ fromNode: 'sr_api', label: 'INSERT ROW' });
+      setActivePacket({ fromNode: 'sr_api', toNode: 'sr_db', label: 'INSERT ROW', color: '#10b981', key: `pkt-4-${Date.now()}` });
       
       setDbRecords([
         {

@@ -179,7 +179,7 @@ export default function GoogleSheetImportStoryboard() {
     const time = new Date().toLocaleTimeString();
 
     if (stepNumber === 1) {
-      setActivePacket({ fromNode: 'sheet', label: 'CSV Stream', key: `pkt-1-${Date.now()}` });
+      setActivePacket({ fromNode: 'sheet', toNode: 'worker', label: 'CSV Stream', key: `pkt-1-${Date.now()}` });
       setLogs((prev) => [
         ...prev,
         {
@@ -197,7 +197,7 @@ export default function GoogleSheetImportStoryboard() {
         }
       ]);
     } else if (stepNumber === 2) {
-      setActivePacket({ fromNode: 'worker', label: 'Batch JSON', key: `pkt-2-${Date.now()}` });
+      setActivePacket({ fromNode: 'worker', toNode: 'dispatcher', label: 'Batch JSON', key: `pkt-2-${Date.now()}` });
       const totalCount = sheetRows.length;
       const allNormalized = sheetRows.map((r) => formatSmartRecruitersPayload(r));
 
@@ -235,11 +235,15 @@ export default function GoogleSheetImportStoryboard() {
         const targetJobId = targetRow.jobId || targetRow['Job ID'] || 'job-7712';
 
         // Unique key forces React to unmount and remount packet div, triggering CSS animation every row step
-        setActivePacket({ 
-          fromNode: 'dispatcher', 
-          label: `POST Row ${targetRow.id}`, 
-          key: `pkt-row-${targetRow.id}-${Date.now()}` 
-        });
+        if (targetRow) {
+          setActivePacket({ 
+            fromNode: 'dispatcher', 
+            toNode: 'sr_core', 
+            label: `POST Row ${targetRow.id}`, 
+            color: '#10b981',
+            key: `pkt-row-${targetRow.id}-${Date.now()}` 
+          });
+        }
 
         setDbRecords((prev) => [
           ...prev,
@@ -273,6 +277,7 @@ export default function GoogleSheetImportStoryboard() {
             statusType: isFinalRow ? 'success' : 'process'
           }
         ]);
+      
       }
     }
 
