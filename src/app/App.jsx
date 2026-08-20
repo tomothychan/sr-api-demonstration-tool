@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ApiHeader from './ApiHeader';
 import CandidateApplicationStoryboard from '../scenarios/CandidateApplicationStoryboard';
 import SuccessFactorsHandoffStoryboard from '../scenarios/SuccessFactorsHandoffStoryboard';
-import GoogleSheetImportStoryBoard from '../scenarios/GoogleSheetImportStoryBoard';
+import GoogleSheetImportStoryBoard from '../scenarios/GoogleSheetImportStoryboard';
 import WebhookSubscriptionStoryboard from '../scenarios/WebhookSubscriptionStoryboard';
 import '../index.css';
 
