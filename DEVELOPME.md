@@ -1,2 +1,10 @@
-New scenarios:
-- Subcribe to webhook, and then recieve webhook notification to update company data, prolly new applicants, and also trigger background check workflow. The data should flow between the 2 nodes back and forth for the subscribe to webhook and recieve webhook. There should be 2 nodes this data sends to, one to update the company db, one to send an automated request to background check agency
+fix
+
+03 -> batch node sending i want 1 send per. also logic is abit flawed, it sends to api then the server, so many times (ignore rate limiting)
+04 -> node doesnt give notifciation
+
+finish the powerpoint
+
+export this to a desktop app? convert to a tauri vite project?
+
+A developer's guide to adding new scenarios

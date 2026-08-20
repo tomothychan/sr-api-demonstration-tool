@@ -41,7 +41,7 @@ export default function LiveDatabaseTable({
       case 'added':
         return (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '3px 8px', borderRadius: '4px', backgroundColor: '#10b981', color: '#ffffff', fontSize: '0.68rem', fontWeight: 700 }}>
-            <Plus size={12} /> + ADDED
+            <Plus size={12} /> ADDED
           </span>
         );
       case 'updated':
@@ -53,7 +53,7 @@ export default function LiveDatabaseTable({
       case 'deleted':
         return (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', padding: '3px 8px', borderRadius: '4px', backgroundColor: '#ef4444', color: '#ffffff', fontSize: '0.68rem', fontWeight: 700 }}>
-            <Minus size={12} /> - DELETED
+            <Minus size={12} /> DELETED
           </span>
         );
       default:

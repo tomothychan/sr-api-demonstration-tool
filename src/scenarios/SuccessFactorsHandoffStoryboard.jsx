@@ -198,7 +198,7 @@ export default function SuccessFactorsHandoffStoryboard() {
             <LiveDatabaseTable 
               tableName="SuccessFactors EC (Manage Pending Hires)"
               records={dbRecords} 
-              columns={DB_COLUMNS} 
+              columns={DB_COLUMNS} // no needed.
             />
           </div>
 
