@@ -2,6 +2,7 @@
 Browser Feature:
 - See all scenarios saved to browser as a list.
 - Rename scenarios
+- Export and import Scenarios
 
 Scenarios are all saved to browder and itself can be - via indexDB.
 - a template json
@@ -15,3 +16,5 @@ dbState is an array of arrys, where the 0ths entry is the header, and the dbStat
 types of components: `form`, `nodeGraph`, `dbTable`, `inspectorPanel`
 
 Also the app checks if you have any existing scenarios stored in your browser and add it to the tab for you. handle tablist overflowing too please. (never shrink them, always make sure they are truncated instead) if not enough space, add a drop down at the far end
+
+Export button in the editor

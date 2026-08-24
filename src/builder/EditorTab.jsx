@@ -20,7 +20,7 @@ import {
   Code
 } from 'lucide-react';
 
-import { storageService } from './storageService';
+import { storageService } from './StorageService';
 import { DEFAULT_SCENARIO_TEMPLATE } from './DefaultScenario';
 import { ScenarioModel, BaseComponent, Step, StepActivity } from './ScenarioModels';
 
