@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, RefreshCw } from 'lucide-react'; 
+import { Sun, Moon, RefreshCw, Upload, Download } from 'lucide-react'; 
 import sapLogo from '../assets/sap-logo.png';
 
 export default function ApiHeader({ 
@@ -8,8 +8,23 @@ export default function ApiHeader({
   onReset, 
   activeTab, 
   setActiveTab, 
-  tabs 
+  tabs,
+  onImport,
+  onExport,
 }) {
+
+  const isFunctionEmpty = (fn) => {
+    if (typeof fn !== 'function') return true;
+    
+    // Strip whitespace, arrow functions, and braces to check for executable code
+    const body = fn
+      .toString()
+      .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') // Remove comments
+      .replace(/\s/g, '');                     // Remove whitespace
+
+    return body.includes('{}') || body.endsWith('=>{}');
+  };
+
   return (
     <header className="sr-header-wrapper">
       {/* Top Bar: Title & Global Actions */}
@@ -41,10 +56,24 @@ export default function ApiHeader({
             )}
           </button>
 
-          <button onClick={onReset} className="sr-btn sr-btn-secondary">
-            <RefreshCw className="sr-icon-sm" />
-            <span>Reset Scenario</span>
-          </button>
+          {!isFunctionEmpty(onReset) && (
+            <button onClick={onReset} className="sr-btn sr-btn-secondary">
+              <RefreshCw className="sr-icon-sm" />
+              <span>Reset Scenario</span>
+            </button>
+          )}
+          {!isFunctionEmpty(onImport) && (
+            <button onClick={onImport} className="sr-btn sr-btn-secondary">
+              <Upload className="sr-icon-sm" />
+              <span>Import</span>
+            </button>
+          )}
+          {!isFunctionEmpty(onExport) && (
+            <button onClick={onExport} className="sr-btn sr-btn-secondary">
+              <Download className="sr-icon-sm" />
+              <span>Export</span>
+            </button>
+          )}
         </div>
       </div>
 

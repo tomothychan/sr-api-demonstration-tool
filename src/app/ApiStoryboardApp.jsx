@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ApiHeader from './ApiHeader';
+import ApiHeader from '../components/ApiHeader';
 import CandidateApplicationStoryboard from '../scenarios/CandidateApplicationStoryboard';
 import SuccessFactorsHandoffStoryboard from '../scenarios/SuccessFactorsHandoffStoryboard';
 import GoogleSheetImportStoryBoard from '../scenarios/GoogleSheetImportStoryboard';
