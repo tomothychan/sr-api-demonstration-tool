@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ApiHeader from '../components/ApiHeader';
 import { Upload, Download } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
+import BrowserTab from '../builder/BrowserTab';
+import EditorTab from '../builder/EditorTab';
 import '../index.css';
 
 export default function StoryboardBuilderApp() {
@@ -62,14 +64,11 @@ export default function StoryboardBuilderApp() {
         )}
 
         {activeTab === 'edit' && (
-          <h1>Edit App</h1>
+          <EditorTab scenarioId="example-scenario-id" />
         )}
 
         {activeTab === 'browse' && (
-          <div className="sr-empty-state-tab">
-            <h2>Empty Tab</h2>
-            <p>Ready to build: A new scenario of your own!</p>
-          </div>
+          <BrowserTab />
         )}
       </main>
     </div>

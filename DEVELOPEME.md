@@ -1,20 +1,9 @@
 # Features for this week
-Editor Features:
-- Edit Scenario `baseComponents`
-  - edit, place and delete nodes in a table
-  - add edges (only between nodes of neiboring collumns)
-  - edit db Collumns
-- Edit steps
-  - shows all actitvity in a step
-  - add, reorder and delete step
-  - move
-- Save to browser button
-
 Browser Feature:
 - See all scenarios saved to browser as a list.
 - Rename scenarios
 
-Scenarios are all saved to browder and itself can be:
+Scenarios are all saved to browder and itself can be - via indexDB.
 - a template json
 - a jsx file (exactly like the ones already on file)
 
@@ -26,12 +15,10 @@ dbState is an array of arrys, where the 0ths entry is the header, and the dbStat
 types of components: `form`, `nodeGraph`, `dbTable`, `inspectorPanel`
 
 Also the app checks if you have any existing scenarios stored in your browser and add it to the tab for you. handle tablist overflowing too please. (never shrink them, always make sure they are truncated instead) if not enough space, add a drop down at the far end
-
-## Scenario Json Format
-```json
 {
   "id" : "my-scenario-id",
   "name" : "my-scenario-name",
+  "inspectorPanelEnabled": "true",
   "baseComponents": [ // in vertical order
     { // example for a filled in form
       "type": "form",
