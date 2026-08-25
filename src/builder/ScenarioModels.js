@@ -61,7 +61,7 @@ export class ScenarioModel {
     description = '',
     inspectorPanelEnabled = true,
     baseComponents = [],
-    steps = []
+    steps = [new Step({ title: 'Initial Step', activities: [] })]
   } = {}) {
     this.id = id;
     this.name = name;

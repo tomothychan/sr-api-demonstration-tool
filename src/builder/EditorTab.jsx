@@ -45,7 +45,6 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     const initScenario = async () => {
       setNotFound(false);
       
-      // Fetch active editing ID directly from LocalStorage
       const idToLoad = await storageService.getActiveEditingScenarioId();
 
       if (!idToLoad) {
@@ -53,7 +52,6 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
         return;
       }
 
-      // Load matching scenario from IndexedDB
       const loadedData = await storageService.loadScenario(idToLoad);
       if (loadedData) {
         setScenario(new ScenarioModel(loadedData));
@@ -132,11 +130,41 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     }
   };
 
+  // Base Component Check Helpers
+  const scenarioHasNodeGraph = () => scenario?.baseComponents.some((c) => c.type === 'nodeGraph');
+  const scenarioHasDbTable = () => scenario?.baseComponents.some((c) => c.type === 'dbTable');
+  const scenarioHasForm = () => scenario?.baseComponents.some((c) => c.type === 'form');
+  const scenarioHasInspectorPanel = () => scenario?.inspectorPanelEnabled;
+
+  // Check if an activity type should be disabled/crossed out
+  const isActivityDisabled = (type) => {
+    if (type === 'inspectorPanelEntry') return !scenarioHasInspectorPanel();
+    if (type === 'dbMutations') return !scenarioHasDbTable();
+    if (type === 'NodeUpdate' || type === 'EdgeUpdate' || type === 'PacketMovement') {
+      return !scenarioHasNodeGraph();
+    }
+    return false;
+  };
+
   const addStepActivity = (type) => {
-    if (type === 'inspectorPanelEntry' && !scenario.inspectorPanelEnabled) {
+    if (type === 'inspectorPanelEntry' && !scenarioHasInspectorPanel()) {
       setNotification({
         type: 'warning',
         message: 'Adding a new Inspector Panel Entry requires you to turn the Inspector Panel ON.'
+      });
+      return;
+    }
+    if ((type === 'NodeUpdate' || type === 'EdgeUpdate' || type === 'PacketMovement') && !scenarioHasNodeGraph()) {
+      setNotification({
+        type: 'warning',
+        message: 'Adding this activity requires at least one Node Graph component in the scenario.'
+      });
+      return;
+    }
+    if (type === 'dbMutations' && !scenarioHasDbTable()) {
+      setNotification({
+        type: 'warning',
+        message: 'Adding a new DB Mutations activity requires at least one Database Table component in the scenario.'
       });
       return;
     }
@@ -194,7 +222,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     setScenario(new ScenarioModel({ ...scenario, steps: updatedSteps }));
   };
 
-  const hasForm = scenario?.baseComponents.some((c) => c.type === 'form');
+  const hasForm = scenarioHasForm();
 
   const addComponent = (type) => {
     if (type === 'form' && hasForm) return;
@@ -284,19 +312,19 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
         <div className="sr-panel-content" style={{ width: '100%', maxWidth: 'none', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '4rem' }}>
           
           {/* Top Command Bar */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: '1px solid var(--sr-color-border)' }}>
+          <div className="sr-flex-between" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--sr-color-border)' }}>
             <div>
               <span className="sr-badge sr-badge-blue">Scenario Authoring Environment</span>
               <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>Step Activity Timeline</h2>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <button className="sr-btn sr-btn-secondary" style={{ gap: '0.5rem' }}>
+            <div className="sr-flex-gap">
+              <button className="sr-btn sr-btn-secondary">
                 <Play size={16} />
                 <span>Simulate</span>
               </button>
 
-              <button className="sr-btn sr-btn-primary" onClick={handleSaveToBrowser} style={{ gap: '0.5rem' }}>
+              <button className="sr-btn sr-btn-primary" onClick={handleSaveToBrowser}>
                 <Save size={16} />
                 <span>{saveStatus || 'Save to Browser'}</span>
               </button>
@@ -304,11 +332,11 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
           </div>
 
           {/* Main Step Builder Area */}
-          <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1.25rem' }}>
+          <div className="sr-scenario-grid">
             
             {/* Step Sidebar */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRight: '1px solid var(--sr-color-border)', paddingRight: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <div className="sr-step-sidebar">
+              <div className="sr-flex-between" style={{ marginBottom: '0.5rem' }}>
                 <span className="sr-label">STEPS ({scenario.steps.length})</span>
                 <button onClick={addStep} className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }} title="Add Step">
                   <Plus size={14} />
@@ -338,7 +366,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                       Step {idx}
                     </span>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="sr-flex-gap-sm" onClick={(e) => e.stopPropagation()}>
                       <button className="sr-btn sr-btn-secondary" style={{ padding: '0.15rem', border: 'none' }} onClick={() => moveStep(idx, -1)} title="Move Step Up">
                         <ArrowUp size={11} />
                       </button>
@@ -358,7 +386,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
 
             {/* Step Detail Editor */}
             <div className="sr-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className="sr-flex-between">
                 <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600 }}>
                   Editing Step {activeStepIndex}
                 </h3>
@@ -366,41 +394,25 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                 <div style={{ position: 'relative' }}>
                   <button 
                     className="sr-btn sr-btn-secondary" 
-                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', gap: '0.35rem' }}
+                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
                     onClick={() => setShowActivityDropdown(!showActivityDropdown)}
                   >
                     <Plus size={13} />
                     <span>Add Activity</span>
                   </button>
 
+                  {/* Activity Type Dropdown with Strikethroughs */}
                   {showActivityDropdown && (
-                    <div style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: '110%',
-                      backgroundColor: 'var(--sr-color-bg-surface)',
-                      border: '1px solid var(--sr-color-border)',
-                      borderRadius: 'var(--sr-radius-md)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-                      zIndex: 30,
-                      width: '190px',
-                      overflow: 'hidden'
-                    }}>
+                    <div className="sr-dropdown-menu">
                       {ACTIVITY_TYPES.map((actType) => {
                         const IconComponent = actType.icon;
-                        const isInspectorDisabled = actType.id === 'inspectorPanelEntry' && !scenario.inspectorPanelEnabled;
+                        const disabled = isActivityDisabled(actType.id);
 
                         return (
                           <div 
                             key={actType.id} 
-                            className="sr-tab-btn" 
-                            style={{ 
-                              padding: '0.5rem 0.75rem', 
-                              fontSize: '0.75rem',
-                              textDecoration: isInspectorDisabled ? 'line-through' : 'none',
-                              opacity: isInspectorDisabled ? 0.5 : 1,
-                              cursor: 'pointer'
-                            }}
+                            className={`sr-tab-btn ${disabled ? 'sr-activity-disabled' : ''}`}
+                            style={{ padding: '0.5rem 0.75rem', fontSize: '0.75rem' }}
                             onClick={() => addStepActivity(actType.id)}
                           >
                             <IconComponent size={14} style={{ color: actType.color }} />
@@ -442,8 +454,8 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
 
                     return (
                       <div key={act.id || actIdx} style={{ padding: '0.75rem', borderRadius: 'var(--sr-radius-md)', border: '1px solid var(--sr-color-border)', backgroundColor: 'var(--sr-color-bg-base)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div className="sr-flex-between" style={{ marginBottom: '0.5rem' }}>
+                          <div className="sr-flex-gap">
                             <IconComponent size={15} style={{ color: actMeta.color }} />
                             <input 
                               type="text" 
@@ -460,7 +472,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                             />
                           </div>
 
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <div className="sr-flex-gap-sm">
                             <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem' }} onClick={() => moveActivityWithinStep(actIdx, -1)} title="Move Up">
                               <ArrowUp size={12} />
                             </button>
@@ -513,40 +525,16 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
           boxSizing: 'border-box'
         }}
       >
-        {/* Toggle Circle Indicator Button */}
+        {/* Toggle Circle Button */}
         <button 
           onClick={() => setIsRightPanelCollapsed(!isRightPanelCollapsed)}
-          style={{ 
-            position: 'absolute', 
-            top: '1.25rem', 
-            left: '-12px', 
-            zIndex: 40, 
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--sr-color-bg-surface)',
-            border: '1px solid var(--sr-color-border)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justify: 'center',
-            padding: 0
-          }}
+          className="sr-panel-toggle-btn"
           title={isRightPanelCollapsed ? 'Expand Panel' : 'Collapse Panel'}
         >
-          <span 
-            style={{ 
-              width: '8px', 
-              height: '8px', 
-              borderRadius: '50%', 
-              backgroundColor: isRightPanelCollapsed ? 'var(--sr-color-primary)' : 'var(--sr-color-text-muted)',
-              transition: 'background-color 0.25s ease'
-            }} 
-          />
+          <span className={`sr-panel-toggle-dot ${isRightPanelCollapsed ? 'sr-panel-toggle-dot-active' : ''}`} />
         </button>
 
-        {/* Inner Content Wrapper */}
+        {/* Inner Panel Content */}
         <div 
           style={{ 
             opacity: isRightPanelCollapsed ? 0 : 1, 
@@ -560,7 +548,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
         >
           {/* Metadata Card */}
           <div className="sr-card" style={{ padding: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            <div className="sr-flex-between" style={{ marginBottom: '0.75rem' }}>
               <span className="sr-label">SCENARIO DESCRIPTION</span>
               
               <button 
@@ -569,7 +557,6 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                 style={{ 
                   padding: '0.25rem 0.6rem', 
                   fontSize: '0.75rem', 
-                  gap: '0.35rem',
                   backgroundColor: scenario.inspectorPanelEnabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                   color: scenario.inspectorPanelEnabled ? '#10b981' : '#ef4444',
                   border: `1px solid ${scenario.inspectorPanelEnabled ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
@@ -593,9 +580,8 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
               <div className="sr-form-group">
                 <label className="sr-label">Description</label>
                 <textarea 
-                  className="sr-input" 
+                  className="sr-input sr-textarea-vertical" 
                   rows={2} 
-                  style={{ resize: 'vertical' }}
                   value={scenario.description} 
                   onChange={(e) => setScenario(new ScenarioModel({ ...scenario, description: e.target.value }))} 
                 />
@@ -605,8 +591,8 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
 
           {/* Base Components Section */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="sr-flex-between" style={{ marginBottom: '0.75rem' }}>
+              <div className="sr-flex-gap">
                 <Layers size={16} style={{ color: 'var(--sr-color-primary)' }} />
                 <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>Base Components</h3>
               </div>
@@ -622,18 +608,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                 </button>
 
                 {showComponentDropdown && (
-                  <div style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '110%',
-                    backgroundColor: 'var(--sr-color-bg-surface)',
-                    border: '1px solid var(--sr-color-border)',
-                    borderRadius: 'var(--sr-radius-md)',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-                    zIndex: 30,
-                    width: '180px',
-                    overflow: 'hidden'
-                  }}>
+                  <div className="sr-dropdown-menu" style={{ width: '180px' }}>
                     <button 
                       className="sr-tab-btn" 
                       disabled={hasForm}
@@ -666,29 +641,18 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
               </div>
             </div>
 
-            {/* Component Cards with Inline Title Editing */}
+            {/* Base Component Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {scenario.baseComponents.map((comp, idx) => {
-                let badgeStyle = { color: '#a855f7', bg: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.3)' };
-                if (comp.type === 'nodeGraph') {
-                  badgeStyle = { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.3)' };
-                } else if (comp.type === 'dbTable') {
-                  badgeStyle = { color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: 'rgba(16, 185, 129, 0.3)' };
-                }
+                let badgeClass = 'sr-badge-purple';
+                if (comp.type === 'nodeGraph') badgeClass = 'sr-badge-orange';
+                else if (comp.type === 'dbTable') badgeClass = 'sr-badge-green';
 
                 return (
                   <div key={comp.id || idx} className="sr-card" style={{ padding: '0.85rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, marginRight: '0.5rem' }}>
-                        <span 
-                          className="sr-badge" 
-                          style={{ 
-                            fontSize: '0.65rem', 
-                            backgroundColor: badgeStyle.bg, 
-                            color: badgeStyle.color, 
-                            border: `1px solid ${badgeStyle.border}` 
-                          }}
-                        >
+                    <div className="sr-flex-between">
+                      <div className="sr-flex-gap" style={{ flex: 1, marginRight: '0.5rem' }}>
+                        <span className={`sr-badge ${badgeClass}`} style={{ fontSize: '0.65rem' }}>
                           {comp.type}
                         </span>
                         
@@ -705,7 +669,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                         />
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <div className="sr-flex-gap-sm">
                         <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem 0.35rem' }} onClick={() => moveComponent(idx, -1)} title="Move Up">
                           <ArrowUp size={12} />
                         </button>

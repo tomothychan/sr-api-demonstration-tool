@@ -12,10 +12,8 @@ import {
 } from 'lucide-react';
 
 import { storageService } from './StorageService';
-import { ScenarioModel } from './ScenarioModels';
 import NotificationBanner from '../components/NotificationBanner';
 
-// 4 Built-In Static Scenarios (JSX-based)
 const BUILT_IN_SCENARIOS = [
   {
     id: 'candidate-app',
@@ -58,7 +56,6 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
     loadAllScenarios();
   }, []);
 
-  // Load Built-In and IndexedDB Custom Scenarios + Showcase Panel IDs
   const loadAllScenarios = async () => {
     const customList = await storageService.getAllScenarios();
     const showcaseIds = await storageService.getShowcasePanelScenarios();
@@ -93,7 +90,6 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
     }
   };
 
-  // Inline Rename Handlers
   const handleStartRename = (sc) => {
     setEditingId(sc.id);
     setEditingName(sc.name);
@@ -116,7 +112,6 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
     setNotification({ type: 'success', message: `Renamed scenario to "${editingName}"` });
   };
 
-  // Showcase Checkbox Handler
   const handleToggleShowcase = async (sc) => {
     const newStatus = !sc.showcaseEnabled;
 
@@ -131,12 +126,10 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
     );
   };
 
-  // Delete Custom Scenario & Remove from Showcase Panel
   const handleDeleteScenario = async (scId) => {
     await storageService.deleteScenario(scId);
     await storageService.removeShowcasePanelScenario(scId);
     
-    // Clear active editing ID if deleted scenario was active
     const activeEditingId = await storageService.getActiveEditingScenarioId();
     if (activeEditingId === scId) {
       await storageService.setActiveEditingScenarioId(null);
@@ -146,7 +139,6 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
     setNotification({ type: 'info', message: 'Custom scenario deleted from browser storage.' });
   };
 
-  // Export JSON File
   const handleExportJson = (sc) => {
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(sc, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -157,7 +149,6 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
     downloadAnchor.remove();
   };
 
-  // Import JSON Scenario File
   const handleImportJson = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -203,26 +194,20 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
       <div className="sr-panel-content" style={{ maxWidth: '1000px', margin: '0 auto' }}>
         
         {/* Header & Controls Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <div className="sr-flex-between" style={{ marginBottom: '1.5rem' }}>
           <div>
             <span className="sr-badge sr-badge-blue">Scenario Manager</span>
             <h2 className="sr-title">Browser Scenario Repository</h2>
             <p className="sr-subtitle">Manage built-in scenarios, custom JSON entries, imports, and exports.</p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {/* Create New Scenario Button */}
-            <button 
-              className="sr-btn sr-btn-primary" 
-              style={{ gap: '0.5rem' }}
-              onClick={handleCreateNewScenario}
-            >
+          <div className="sr-flex-gap">
+            <button className="sr-btn sr-btn-primary" onClick={handleCreateNewScenario}>
               <Plus size={15} />
               <span>Create New Scenario</span>
             </button>
 
-            {/* JSON File Import Button */}
-            <label className="sr-btn sr-btn-secondary" style={{ cursor: 'pointer', gap: '0.5rem' }}>
+            <label className="sr-btn sr-btn-secondary" style={{ cursor: 'pointer' }}>
               <Upload size={15} />
               <span>Import JSON</span>
               <input type="file" accept=".json" onChange={handleImportJson} style={{ display: 'none' }} />
@@ -231,12 +216,11 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
         </div>
 
         {/* Search Bar */}
-        <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
-          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--sr-color-text-subtle)' }} />
+        <div className="sr-search-wrapper">
+          <Search size={16} className="sr-search-icon" />
           <input 
             type="text" 
-            className="sr-input" 
-            style={{ paddingLeft: '2.5rem', width: '100%', boxSizing: 'border-box' }}
+            className="sr-input sr-search-input" 
             placeholder="Search scenarios by name or description..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -251,17 +235,11 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
             return (
               <div 
                 key={sc.id} 
-                className="sr-card"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justify: 'space-between',
-                  padding: '1rem 1.25rem',
-                  gap: '1rem'
-                }}
+                className="sr-card sr-flex-between"
+                style={{ padding: '1rem 1.25rem', gap: '1rem' }}
               >
-                {/* Left Side: Checkbox, Details, Badges */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: 0 }}>
+                {/* Left Side */}
+                <div className="sr-flex-gap" style={{ flex: 1, minWidth: 0, gap: '1rem' }}>
                   
                   <input 
                     type="checkbox" 
@@ -272,22 +250,14 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
                   />
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <div className="sr-flex-gap" style={{ marginBottom: '0.25rem' }}>
                       
-                      <span 
-                        className="sr-badge"
-                        style={{
-                          fontSize: '0.65rem',
-                          backgroundColor: sc.isBuiltIn ? 'rgba(59, 130, 246, 0.15)' : 'rgba(168, 85, 247, 0.15)',
-                          color: sc.isBuiltIn ? '#3b82f6' : '#a855f7',
-                          border: `1px solid ${sc.isBuiltIn ? 'rgba(59, 130, 246, 0.3)' : 'rgba(168, 85, 247, 0.3)'}`
-                        }}
-                      >
+                      <span className={`sr-badge ${sc.isBuiltIn ? 'sr-badge-blue' : 'sr-badge-purple'}`} style={{ fontSize: '0.65rem' }}>
                         {sc.isBuiltIn ? 'JSX Built-In' : 'JSON Custom'}
                       </span>
 
                       {isEditing ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div className="sr-flex-gap-sm">
                           <input 
                             type="text" 
                             className="sr-input" 
@@ -303,7 +273,7 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
                           </button>
                         </div>
                       ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <div className="sr-flex-gap-sm">
                           <h3 style={{ margin: 0, fontSize: '0.925rem', fontWeight: 600 }}>{sc.name}</h3>
                           <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem', border: 'none' }} onClick={() => handleStartRename(sc)} title="Rename scenario">
                             <Edit2 size={12} style={{ opacity: 0.6 }} />
@@ -318,26 +288,22 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
                   </div>
                 </div>
 
-                {/* Right Side: Action Buttons */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                  
-                  {/* Simulate Button */}
+                {/* Right Side */}
+                <div className="sr-flex-gap" style={{ flexShrink: 0 }}>
                   <button 
                     className="sr-btn sr-btn-primary" 
-                    style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem', gap: '0.35rem' }}
+                    style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem' }}
                     onClick={() => onSimulateScenario && onSimulateScenario(sc.id)}
                   >
                     <Play size={13} />
                     <span>Simulate</span>
                   </button>
 
-                  {/* Actions for JSON custom scenarios only */}
                   {sc.type === 'json' && (
                     <>
-                      {/* Edit Scenario Button */}
                       <button 
                         className="sr-btn sr-btn-secondary" 
-                        style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem', gap: '0.35rem' }}
+                        style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem' }}
                         onClick={() => handleEditScenario(sc.id)}
                         title="Edit scenario in visual editor"
                       >
@@ -345,10 +311,9 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
                         <span>Edit</span>
                       </button>
 
-                      {/* Export JSON Button */}
                       <button 
                         className="sr-btn sr-btn-secondary" 
-                        style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem', gap: '0.35rem' }}
+                        style={{ padding: '0.4rem 0.65rem', fontSize: '0.75rem' }}
                         onClick={() => handleExportJson(sc)}
                         title="Export scenario as JSON file"
                       >
@@ -358,7 +323,6 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
                     </>
                   )}
 
-                  {/* Delete Custom Scenario Button */}
                   {!sc.isBuiltIn && (
                     <button 
                       className="sr-btn sr-btn-secondary" 

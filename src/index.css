@@ -201,6 +201,18 @@
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+.sr-badge-purple {
+  color: #a855f7;
+  background-color: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.sr-badge-orange {
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 /* Form & Input Components */
 .sr-card {
   background-color: var(--sr-color-bg-surface);
@@ -246,6 +258,10 @@
 .sr-input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.sr-textarea-vertical {
+  resize: vertical;
 }
 
 /* Buttons */
@@ -295,6 +311,25 @@
 
 .sr-form-actions .sr-btn {
   width: 100%;
+}
+
+/* Layout Flex & Alignment Utilities */
+.sr-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sr-flex-gap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sr-flex-gap-sm {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 /* Logs and Timeline */
@@ -500,28 +535,109 @@
   text-align: center;
 }
 
+/* Search Bar Utilities */
+.sr-search-wrapper {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.sr-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--sr-color-text-subtle);
+}
+
+.sr-search-input {
+  padding-left: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Scenario Grid & Editor UI Layouts */
+.sr-scenario-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.25rem;
+}
+
+.sr-step-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-right: 1px solid var(--sr-color-border);
+  padding-right: 0.75rem;
+}
+
+.sr-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background-color: var(--sr-color-bg-surface);
+  border: 1px solid var(--sr-color-border);
+  border-radius: var(--sr-radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  z-index: 30;
+  width: 190px;
+  overflow: hidden;
+}
+
+/* Activity Items & Strikethrough State */
+.sr-activity-disabled {
+  text-decoration: line-through;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.sr-panel-toggle-btn {
+  position: absolute;
+  top: 1.25rem;
+  left: -12px;
+  z-index: 40;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--sr-color-bg-surface);
+  border: 1px solid var(--sr-color-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.sr-panel-toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--sr-color-text-muted);
+  transition: background-color var(--sr-transition-normal);
+}
+
+.sr-panel-toggle-dot-active {
+  background-color: var(--sr-color-primary);
+}
+
 /* Remove default browser margins and set dark mode at the root level */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #121212; /* Replace with your app's dark mode background color */
-  color: #ffffff; /* Default text color for dark mode */
+  background-color: #121212;
+  color: #ffffff;
 }
 
-/* Ensure the root container takes full height */
 #root, #__next {
   min-height: 100vh;
 }
 
-/* Standard Firefox & Modern Engine Scrollbars */
 * {
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
 }
 
-
-/* WebKit Engine Scrollbars (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -540,12 +656,10 @@ html, body {
   background: var(--scrollbar-hover);
 }
 
-/* Section wrapper with bottom scroll clearance */
 .sr-section-padded {
   padding-bottom: 2rem;
 }
 
-/* Sub-heading row container (Icon + Title) */
 .sr-subheading-group {
   display: flex;
   align-items: center;
@@ -553,7 +667,6 @@ html, body {
   margin-bottom: 0.75rem;
 }
 
-/* Sub-heading title text */
 .sr-subheading-title {
   margin: 0;
   font-size: 0.925rem;
@@ -561,10 +674,7 @@ html, body {
   color: var(--sr-color-text-main, #f8fafc);
 }
 
-/* ==========================================================================
-   In-App Notification Toast Banner
-   ========================================================================== */
-
+/* In-App Notification Toast Banner */
 .sr-notification-banner {
   position: fixed;
   bottom: 1.5rem;
@@ -584,45 +694,17 @@ html, body {
   animation: srFadeIn 0.3s ease-out;
 }
 
-/* Variant Border Colors */
-.sr-notification-banner-warning {
-  border-color: #f59e0b;
-}
+.sr-notification-banner-warning { border-color: #f59e0b; }
+.sr-notification-banner-error { border-color: #ef4444; }
+.sr-notification-banner-success { border-color: #10b981; }
+.sr-notification-banner-info { border-color: #3b82f6; }
 
-.sr-notification-banner-error {
-  border-color: #ef4444;
-}
+.sr-notification-icon { flex-shrink: 0; }
+.sr-notification-icon-warning { color: #f59e0b; }
+.sr-notification-icon-error { color: #ef4444; }
+.sr-notification-icon-success { color: #10b981; }
+.sr-notification-icon-info { color: #3b82f6; }
 
-.sr-notification-banner-success {
-  border-color: #10b981;
-}
-
-.sr-notification-banner-info {
-  border-color: #3b82f6;
-}
-
-/* Icon Styles & Colors */
-.sr-notification-icon {
-  flex-shrink: 0;
-}
-
-.sr-notification-icon-warning {
-  color: #f59e0b;
-}
-
-.sr-notification-icon-error {
-  color: #ef4444;
-}
-
-.sr-notification-icon-success {
-  color: #10b981;
-}
-
-.sr-notification-icon-info {
-  color: #3b82f6;
-}
-
-/* Message & Close Button */
 .sr-notification-message {
   flex: 1;
   line-height: 1.4;
