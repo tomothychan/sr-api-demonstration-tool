@@ -11,18 +11,17 @@ import {
   Network, 
   Database, 
   FileText, 
-  ChevronRight, 
-  ChevronLeft,
   Layers, 
   Play,
   ArrowRightLeft,
   Activity,
-  Code
+  Code,
+  FolderOpen
 } from 'lucide-react';
 
 import { storageService } from './StorageService';
-import { DEFAULT_SCENARIO_TEMPLATE } from './DefaultScenario';
 import { ScenarioModel, BaseComponent, Step, StepActivity } from './ScenarioModels';
+import NotificationBanner from '../components/NotificationBanner';
 
 const ACTIVITY_TYPES = [
   { id: 'dbMutations', label: 'DB Mutations', icon: Database, color: '#10b981' },
@@ -32,22 +31,50 @@ const ACTIVITY_TYPES = [
   { id: 'inspectorPanelEntry', label: 'Inspector Panel Entry', icon: Code, color: '#ec4899' }
 ];
 
-export default function EditorTab({ scenarioId, onSaveSuccess }) {
-  const [scenario, setScenario] = useState(() => new ScenarioModel(DEFAULT_SCENARIO_TEMPLATE));
+export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
+  const [scenario, setScenario] = useState(null);
+  const [notFound, setNotFound] = useState(false);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [showComponentDropdown, setShowComponentDropdown] = useState(false);
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    if (!scenarioId) return;
-    storageService.loadScenario(scenarioId).then((data) => {
-      if (data) setScenario(new ScenarioModel(data));
-    });
-  }, [scenarioId]);
+    const initScenario = async () => {
+      setNotFound(false);
+      
+      // Fetch active editing ID directly from LocalStorage
+      const idToLoad = await storageService.getActiveEditingScenarioId();
+
+      if (!idToLoad) {
+        setNotFound(true);
+        return;
+      }
+
+      // Load matching scenario from IndexedDB
+      const loadedData = await storageService.loadScenario(idToLoad);
+      if (loadedData) {
+        setScenario(new ScenarioModel(loadedData));
+        setNotFound(false);
+      } else {
+        setNotFound(true);
+      }
+    };
+
+    initScenario();
+  }, []);
+
+  const handleCreateNewAndLoad = async () => {
+    const newScenario = await storageService.handleCreateNewScenario();
+    setScenario(newScenario);
+    setActiveStepIndex(0);
+    setNotFound(false);
+  };
 
   const handleSaveToBrowser = async () => {
+    if (!scenario) return;
     const res = await storageService.saveScenario(scenario.toJSON());
     if (res.success) {
       setSaveStatus('Saved!');
@@ -58,7 +85,25 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
     }
   };
 
-  // Step Management Handlers
+  const handleToggleInspectorPanel = () => {
+    if (!scenario) return;
+    if (scenario.inspectorPanelEnabled) {
+      const hasInspectorEntries = scenario.steps.some((step) =>
+        step.activities?.some((act) => act.type === 'inspectorPanelEntry')
+      );
+
+      if (hasInspectorEntries) {
+        setNotification({
+          type: 'warning',
+          message: 'Warning: This scenario contains step activities that log to the Inspector Panel. Turning it off will suppress these logs during execution.'
+        });
+      }
+      setScenario(new ScenarioModel({ ...scenario, inspectorPanelEnabled: false }));
+    } else {
+      setScenario(new ScenarioModel({ ...scenario, inspectorPanelEnabled: true }));
+    }
+  };
+
   const moveStep = (index, direction) => {
     const targetIdx = index + direction;
     if (targetIdx < 0 || targetIdx >= scenario.steps.length) return;
@@ -87,10 +132,12 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
     }
   };
 
-  // Step Activity Handlers (Includes Inspector Panel Active Guard)
   const addStepActivity = (type) => {
     if (type === 'inspectorPanelEntry' && !scenario.inspectorPanelEnabled) {
-      alert('Adding a new Inspector Panel Entry requires you to turn the Inspector Panel ON.');
+      setNotification({
+        type: 'warning',
+        message: 'Adding a new Inspector Panel Entry requires you to turn the Inspector Panel ON.'
+      });
       return;
     }
 
@@ -147,8 +194,7 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
     setScenario(new ScenarioModel({ ...scenario, steps: updatedSteps }));
   };
 
-  // Base Component Handlers
-  const hasForm = scenario.baseComponents.some((c) => c.type === 'form');
+  const hasForm = scenario?.baseComponents.some((c) => c.type === 'form');
 
   const addComponent = (type) => {
     if (type === 'form' && hasForm) return;
@@ -192,11 +238,41 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
     setScenario(new ScenarioModel({ ...scenario, baseComponents: updated }));
   };
 
+  // Render "No Scenario Selected" Empty State
+  if (notFound || !scenario) {
+    return (
+      <div className="sr-panel" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="sr-empty-state" style={{ padding: '3rem', maxWidth: '440px', width: '100%', textAlign: 'center', height: 'auto' }}>
+          <FolderOpen size={42} style={{ color: 'var(--sr-color-primary)', marginBottom: '1rem' }} />
+          <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 600 }}>No Scenario Selected</h2>
+          <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.85rem', color: 'var(--sr-color-text-muted)', lineHeight: 1.5 }}>
+            Select an existing custom scenario from the repository to edit or create a new one to start authoring.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', width: '100%' }}>
+            <button className="sr-btn sr-btn-secondary" onClick={onNavigateToBrowser} style={{ gap: '0.35rem' }}>
+              <FolderOpen size={14} />
+              <span>Select Existing Scenario</span>
+            </button>
+            <button className="sr-btn sr-btn-primary" onClick={handleCreateNewAndLoad} style={{ gap: '0.35rem' }}>
+              <Plus size={14} />
+              <span>Create New Scenario</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const currentActiveStep = scenario.steps[activeStepIndex] || new Step();
 
   return (
     <div className="sr-main-split" style={{ position: 'relative', overflow: 'hidden' }}>
       
+      <NotificationBanner 
+        notification={notification} 
+        onClose={() => setNotification(null)} 
+      />
+
       {/* LEFT PANEL */}
       <section 
         className="sr-panel sr-panel-left" 
@@ -437,28 +513,37 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
           boxSizing: 'border-box'
         }}
       >
-        {/* Toggle Button */}
+        {/* Toggle Circle Indicator Button */}
         <button 
           onClick={() => setIsRightPanelCollapsed(!isRightPanelCollapsed)}
-          className="sr-btn sr-btn-secondary"
           style={{ 
             position: 'absolute', 
             top: '1.25rem', 
-            left: '-14px', 
+            left: '-12px', 
             zIndex: 40, 
-            padding: '0.35rem', 
+            width: '24px',
+            height: '24px',
             borderRadius: '50%',
             backgroundColor: 'var(--sr-color-bg-surface)',
             border: '1px solid var(--sr-color-border)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            justify: 'center'
+            justify: 'center',
+            padding: 0
           }}
-          title={isRightPanelCollapsed ? 'Expand Right Panel' : 'Collapse Right Panel'}
+          title={isRightPanelCollapsed ? 'Expand Panel' : 'Collapse Panel'}
         >
-          {isRightPanelCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+          <span 
+            style={{ 
+              width: '8px', 
+              height: '8px', 
+              borderRadius: '50%', 
+              backgroundColor: isRightPanelCollapsed ? 'var(--sr-color-primary)' : 'var(--sr-color-text-muted)',
+              transition: 'background-color 0.25s ease'
+            }} 
+          />
         </button>
 
         {/* Inner Content Wrapper */}
@@ -476,10 +561,10 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
           {/* Metadata Card */}
           <div className="sr-card" style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <span className="sr-label">SCENARIO METADATA</span>
+              <span className="sr-label">SCENARIO DESCRIPTION</span>
               
               <button 
-                onClick={() => setScenario(new ScenarioModel({ ...scenario, inspectorPanelEnabled: !scenario.inspectorPanelEnabled }))}
+                onClick={handleToggleInspectorPanel}
                 className="sr-btn"
                 style={{ 
                   padding: '0.25rem 0.6rem', 
@@ -510,6 +595,7 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
                 <textarea 
                   className="sr-input" 
                   rows={2} 
+                  style={{ resize: 'vertical' }}
                   value={scenario.description} 
                   onChange={(e) => setScenario(new ScenarioModel({ ...scenario, description: e.target.value }))} 
                 />
@@ -606,7 +692,6 @@ export default function EditorTab({ scenarioId, onSaveSuccess }) {
                           {comp.type}
                         </span>
                         
-                        {/* Inline Title Input */}
                         <input 
                           type="text" 
                           className="sr-input" 

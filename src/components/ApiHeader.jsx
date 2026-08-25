@@ -9,8 +9,6 @@ export default function ApiHeader({
   activeTab, 
   setActiveTab, 
   tabs,
-  onImport,
-  onExport,
 }) {
 
   const isFunctionEmpty = (fn) => {
@@ -60,18 +58,6 @@ export default function ApiHeader({
             <button onClick={onReset} className="sr-btn sr-btn-secondary">
               <RefreshCw className="sr-icon-sm" />
               <span>Reset Scenario</span>
-            </button>
-          )}
-          {!isFunctionEmpty(onImport) && (
-            <button onClick={onImport} className="sr-btn sr-btn-secondary">
-              <Upload className="sr-icon-sm" />
-              <span>Import</span>
-            </button>
-          )}
-          {!isFunctionEmpty(onExport) && (
-            <button onClick={onExport} className="sr-btn sr-btn-secondary">
-              <Download className="sr-icon-sm" />
-              <span>Export</span>
             </button>
           )}
         </div>

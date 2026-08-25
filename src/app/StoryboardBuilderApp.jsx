@@ -11,7 +11,7 @@ export default function StoryboardBuilderApp() {
   const [theme, setTheme] = useState(() => localStorage.getItem('sr-theme') || 'dark');
   
   // Navigation tabs state
-  const [activeTab, setActiveTab] = useState('candidate-app');
+  const [activeTab, setActiveTab] = useState('catalog');
   
   // Reset trigger key (changing key forces child component to remount/reset)
   const [resetKey, setResetKey] = useState(0);
@@ -32,8 +32,8 @@ export default function StoryboardBuilderApp() {
   // List of story board tabs you plan to build
   const TABS = [
     { id: 'home', number: '', label: 'Home' },
-    { id: 'edit', number: '01', label: 'Edit Scenario' },
-    { id: 'browse', number: '02', label: 'Browse Saved Scenarios' },
+    { id: 'catalog', number: '01', label: 'Scenario Catalog' },
+    { id: 'edit', number: '02', label: 'Edit Scenario' },
   ];
 
   // import and export function
@@ -64,11 +64,11 @@ export default function StoryboardBuilderApp() {
         )}
 
         {activeTab === 'edit' && (
-          <EditorTab scenarioId="example-scenario-id" />
+          <EditorTab onNavigateToBrowser={() => setActiveTab('catalog')} />
         )}
 
-        {activeTab === 'browse' && (
-          <BrowserTab />
+        {activeTab === 'catalog' && (
+          <BrowserTab onEditScenario={async () => setActiveTab('edit')} />
         )}
       </main>
     </div>

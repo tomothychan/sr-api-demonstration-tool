@@ -560,3 +560,85 @@ html, body {
   font-weight: 600;
   color: var(--sr-color-text-main, #f8fafc);
 }
+
+/* ==========================================================================
+   In-App Notification Toast Banner
+   ========================================================================== */
+
+.sr-notification-banner {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--sr-color-bg-surface, #1e293b);
+  border: 1px solid var(--sr-color-border, #334155);
+  border-radius: var(--sr-radius-md, 8px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  color: var(--sr-color-text-main, #f8fafc);
+  font-size: 0.825rem;
+  max-width: 400px;
+  animation: srFadeIn 0.3s ease-out;
+}
+
+/* Variant Border Colors */
+.sr-notification-banner-warning {
+  border-color: #f59e0b;
+}
+
+.sr-notification-banner-error {
+  border-color: #ef4444;
+}
+
+.sr-notification-banner-success {
+  border-color: #10b981;
+}
+
+.sr-notification-banner-info {
+  border-color: #3b82f6;
+}
+
+/* Icon Styles & Colors */
+.sr-notification-icon {
+  flex-shrink: 0;
+}
+
+.sr-notification-icon-warning {
+  color: #f59e0b;
+}
+
+.sr-notification-icon-error {
+  color: #ef4444;
+}
+
+.sr-notification-icon-success {
+  color: #10b981;
+}
+
+.sr-notification-icon-info {
+  color: #3b82f6;
+}
+
+/* Message & Close Button */
+.sr-notification-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.sr-notification-close-btn {
+  background: none;
+  border: none;
+  color: var(--sr-color-text-subtle, #94a3b8);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color var(--sr-transition-normal);
+}
+
+.sr-notification-close-btn:hover {
+  color: var(--sr-color-text-main, #f8fafc);
+}
