@@ -352,6 +352,17 @@
   font-size: 0.875rem;
 }
 
+.sr-empty-state-message {
+  width: 100%;
+  min-width: 0;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sr-log-card {
   background-color: var(--sr-color-bg-surface);
   border: 1px solid var(--sr-color-border);
@@ -723,4 +734,129 @@ html, body {
 
 .sr-notification-close-btn:hover {
   color: var(--sr-color-text-main, #f8fafc);
+}
+
+/* ADD to the end of index.css */
+
+/* Responsive Text Truncation & Flex Fixes */
+.sr-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sr-min-w-0 {
+  min-width: 0;
+}
+
+/* Responsive Button Text Hiding (Hides text, leaves icon on narrow screens) */
+@media (max-width: 768px) {
+  .sr-btn-text {
+    display: none;
+  }
+  
+  .sr-scenario-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sr-panel-left {
+    flex: 1 1 100% !important;
+  }
+  
+  .sr-panel-right {
+    flex: 1 1 100% !important;
+  }
+
+  .sr-responsive-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Additions & Fixes for Index CSS */
+
+.sr-main-split {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  width: 100%;
+}
+
+.sr-panel {
+  padding: 2rem;
+  overflow-y: auto;
+  box-sizing: border-box;
+  transition: background-color var(--sr-transition-normal);
+}
+
+.sr-panel-left {
+  background-color: var(--sr-color-bg-base);
+  border-right: 1px solid var(--sr-color-border);
+  display: flex;
+  justify-content: center;
+}
+
+.sr-panel-right {
+  background-color: var(--sr-color-bg-panel-dark);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Form controls reset for Flex/Grid shrinking */
+.sr-input, select.sr-input, textarea.sr-input {
+  min-width: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.sr-scenario-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.sr-step-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-right: 1px solid var(--sr-color-border);
+  padding-right: 0.75rem;
+  min-width: 0;
+}
+
+/* Responsive Breakpoints & Horizontal Shrinkage Handling */
+@media (max-width: 900px) {
+  .sr-main-split {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sr-panel-left, .sr-panel-right {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    border-right: none;
+    border-bottom: 1px solid var(--sr-color-border);
+    padding: 1.25rem !important;
+  }
+
+  .sr-panel-toggle-btn {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .sr-scenario-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sr-step-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--sr-color-border);
+    padding-right: 0;
+    padding-bottom: 1rem;
+  }
+
+  .sr-btn-text {
+    display: none;
+  }
 }

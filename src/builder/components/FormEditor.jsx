@@ -48,10 +48,10 @@ export default function FormEditor({ component, onChange }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', minWidth: 0 }}>
       {/* Simulation Title at the top */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <div className="sr-form-group">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', width: '100%' }}>
+        <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Simulation Title (Label)</label>
           <input 
             type="text" 
@@ -61,7 +61,7 @@ export default function FormEditor({ component, onChange }) {
             placeholder="e.g. Interactive Form Input"
           />
         </div>
-        <div className="sr-form-group">
+        <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Component ID (Target Key)</label>
           <input 
             type="text" 
@@ -73,8 +73,8 @@ export default function FormEditor({ component, onChange }) {
       </div>
 
       {/* Form Fields Section */}
-      <div>
-        <div className="sr-flex-between" style={{ marginBottom: '0.5rem' }}>
+      <div style={{ minWidth: 0 }}>
+        <div className="sr-flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <span className="sr-label">FORM FIELDS ({fields.length})</span>
           <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={addField}>
             <Plus size={13} />
@@ -84,18 +84,18 @@ export default function FormEditor({ component, onChange }) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {fields.map((field, idx) => (
-            <div key={idx} style={{ padding: '0.65rem', borderRadius: 'var(--sr-radius-md)', border: '1px solid var(--sr-color-border)', backgroundColor: 'var(--sr-color-bg-base)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <div className="sr-flex-between">
+            <div key={idx} style={{ padding: '0.65rem', borderRadius: 'var(--sr-radius-md)', border: '1px solid var(--sr-color-border)', backgroundColor: 'var(--sr-color-bg-base)', display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: 0 }}>
+              <div className="sr-flex-between" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
                 <input 
                   type="text" 
                   className="sr-input" 
-                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, flex: 1, marginRight: '0.5rem' }}
+                  style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, flex: '1 1 160px', minWidth: 0 }}
                   placeholder="Field Name (key)"
                   value={field.name || ''} 
                   onChange={(e) => handleFieldChange(idx, 'name', e.target.value)} 
                 />
 
-                <div className="sr-flex-gap-sm">
+                <div className="sr-flex-gap-sm" style={{ flexShrink: 0, marginLeft: 'auto' }}>
                   <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem' }} onClick={() => moveField(idx, -1)} title="Move Up">
                     <ArrowUp size={12} />
                   </button>
@@ -108,23 +108,23 @@ export default function FormEditor({ component, onChange }) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.5rem', width: '100%' }}>
+                <div style={{ minWidth: 0 }}>
                   <label className="sr-label" style={{ fontSize: '0.65rem' }}>Label</label>
                   <input 
                     type="text" 
                     className="sr-input" 
-                    style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
+                    style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', width: '100%' }}
                     value={field.label || ''} 
                     onChange={(e) => handleFieldChange(idx, 'label', e.target.value)} 
                   />
                 </div>
 
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <label className="sr-label" style={{ fontSize: '0.65rem' }}>Type</label>
                   <select 
                     className="sr-input" 
-                    style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
+                    style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', width: '100%' }}
                     value={field.type || 'string'} 
                     onChange={(e) => handleFieldChange(idx, 'type', e.target.value)}
                   >
@@ -134,12 +134,12 @@ export default function FormEditor({ component, onChange }) {
                   </select>
                 </div>
 
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <label className="sr-label" style={{ fontSize: '0.65rem' }}>Default Value</label>
                   <input 
                     type="text" 
                     className="sr-input" 
-                    style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
+                    style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', width: '100%' }}
                     value={field.defaultValue || ''} 
                     onChange={(e) => handleFieldChange(idx, 'defaultValue', e.target.value)} 
                   />

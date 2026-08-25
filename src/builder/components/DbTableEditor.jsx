@@ -50,10 +50,10 @@ export default function DbTableEditor({ component, onChange }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Simulation Title at the top */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
-        <div className="sr-form-group">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', minWidth: 0 }}>
+      {/* Simulation Title at the top - Responsive Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', width: '100%' }}>
+        <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Simulation Title (Label)</label>
           <input 
             type="text" 
@@ -63,7 +63,7 @@ export default function DbTableEditor({ component, onChange }) {
             placeholder="e.g. Candidates Table"
           />
         </div>
-        <div className="sr-form-group">
+        <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Component ID</label>
           <input 
             type="text" 
@@ -72,7 +72,7 @@ export default function DbTableEditor({ component, onChange }) {
             onChange={(e) => updateComponent({ id: e.target.value })} 
           />
         </div>
-        <div className="sr-form-group">
+        <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Database Table Name</label>
           <input 
             type="text" 
@@ -84,8 +84,8 @@ export default function DbTableEditor({ component, onChange }) {
       </div>
 
       {/* Columns Section */}
-      <div>
-        <div className="sr-flex-between" style={{ marginBottom: '0.5rem' }}>
+      <div style={{ minWidth: 0 }}>
+        <div className="sr-flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <span className="sr-label">DATABASE COLUMNS ({columns.length})</span>
           <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={addColumn}>
             <Plus size={13} />
@@ -107,23 +107,25 @@ export default function DbTableEditor({ component, onChange }) {
                   backgroundColor: isFixed ? 'var(--sr-color-primary-light)' : 'var(--sr-color-bg-base)', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  justify: 'space-between',
-                  gap: '0.75rem'
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '0.75rem',
+                  minWidth: 0
                 }}
               >
                 {isFixed ? (
-                  <div className="sr-flex-gap" style={{ flex: 1 }}>
-                    <Lock size={13} style={{ color: 'var(--sr-color-primary)' }} />
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--sr-color-primary)' }}>
+                  <div className="sr-flex-gap" style={{ flex: '1 1 200px', minWidth: 0 }}>
+                    <Lock size={13} style={{ color: 'var(--sr-color-primary)', flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--sr-color-primary)', wordBreak: 'break-word' }}>
                       0th Column: STATE (Fixed Mutation Indicator)
                     </span>
                   </div>
                 ) : (
-                  <div className="sr-flex-gap" style={{ flex: 1 }}>
+                  <div className="sr-flex-gap" style={{ flex: '1 1 180px', minWidth: 0 }}>
                     <input 
                       type="text" 
                       className="sr-input" 
-                      style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, flex: 1 }}
+                      style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, width: '100%', minWidth: 0 }}
                       placeholder="COLUMN_NAME"
                       value={col.key || col.label || ''} 
                       onChange={(e) => handleColumnChange(idx, e.target.value)} 
@@ -132,7 +134,7 @@ export default function DbTableEditor({ component, onChange }) {
                 )}
 
                 {!isFixed && (
-                  <div className="sr-flex-gap-sm">
+                  <div className="sr-flex-gap-sm" style={{ flexShrink: 0, marginLeft: 'auto' }}>
                     <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem' }} onClick={() => moveColumn(idx, -1)} title="Move Up">
                       <ArrowUp size={12} />
                     </button>

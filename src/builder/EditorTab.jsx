@@ -193,8 +193,8 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     if (targetIdx < 0 || targetIdx >= currentStep.activities.length) return;
 
     const updatedActs = [...currentStep.activities];
-    const [moved] = updatedActs.splice(actIndex, 1);
-    updatedActs.splice(targetIdx, 0, moved);
+    const [movedAct] = updatedActs.splice(actIndex, 1);
+    updatedActs.splice(targetIdx, 0, movedAct);
 
     const updatedSteps = [...scenario.steps];
     updatedSteps[activeStepIndex] = new Step({ ...currentStep, activities: updatedActs });
@@ -286,7 +286,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
           <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.85rem', color: 'var(--sr-color-text-muted)', lineHeight: 1.5 }}>
             Select an existing custom scenario from the repository to edit or create a new one to start authoring.
           </p>
-          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', width: '100%' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', width: '100%', flexWrap: 'wrap' }}>
             <button className="sr-btn sr-btn-secondary" onClick={onNavigateToBrowser} style={{ gap: '0.35rem' }}>
               <FolderOpen size={14} />
               <span>Select Existing Scenario</span>
@@ -316,22 +316,23 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
         className="sr-panel sr-panel-left" 
         style={{ 
           flex: isRightPanelCollapsed ? '1 1 calc(100% - 48px)' : '1 1 55%', 
-          transition: 'flex 0.35s cubic-bezier(0.4, 0, 0.2, 1)' 
+          transition: 'flex 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          minWidth: 0
         }}
       >
-        <div className="sr-panel-content" style={{ width: '100%', maxWidth: 'none', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '4rem' }}>
+        <div className="sr-panel-content" style={{ width: '100%', maxWidth: 'none', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '4rem', minWidth: 0 }}>
           
           {/* Command Bar */}
-          <div className="sr-flex-between" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--sr-color-border)' }}>
+          <div className="sr-flex-between" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--sr-color-border)', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
               <span className="sr-badge sr-badge-blue">Scenario Authoring Environment</span>
               <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>Step Activity Timeline</h2>
             </div>
 
-            <div className="sr-flex-gap">
+            <div className="sr-flex-gap" style={{ flexWrap: 'wrap' }}>
               <button className="sr-btn sr-btn-secondary">
                 <Play size={16} />
-                <span>Simulate</span>
+                <span className="sr-btn-text">Simulate</span>
               </button>
 
               <button className="sr-btn sr-btn-primary" onClick={handleSaveToBrowser}>
@@ -342,11 +343,11 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
           </div>
 
           {/* Main Step Builder Grid */}
-          <div className="sr-scenario-grid">
+          <div className="sr-scenario-grid" style={{ minWidth: 0 }}>
             
             {/* Step Sidebar */}
-            <div className="sr-step-sidebar">
-              <div className="sr-flex-between" style={{ marginBottom: '0.5rem' }}>
+            <div className="sr-step-sidebar" style={{ minWidth: 0 }}>
+              <div className="sr-flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.25rem' }}>
                 <span className="sr-label">STEPS ({scenario.steps.length})</span>
                 <button onClick={addStep} className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }} title="Add Step">
                   <Plus size={14} />
@@ -369,14 +370,16 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                       border: `1px solid ${isActive ? 'var(--sr-color-primary)' : 'var(--sr-color-border)'}`,
                       cursor: 'pointer',
                       fontSize: '0.8rem',
-                      fontWeight: isActive ? 600 : 400
+                      fontWeight: isActive ? 600 : 400,
+                      gap: '0.35rem',
+                      minWidth: 0
                     }}
                   >
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '110px' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                       Step {idx}
                     </span>
 
-                    <div className="sr-flex-gap-sm" onClick={(e) => e.stopPropagation()}>
+                    <div className="sr-flex-gap-sm" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                       <button className="sr-btn sr-btn-secondary" style={{ padding: '0.15rem', border: 'none' }} onClick={() => moveStep(idx, -1)} title="Move Step Up">
                         <ArrowUp size={11} />
                       </button>
@@ -395,8 +398,8 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
             </div>
 
             {/* Step Detail Editor */}
-            <div className="sr-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="sr-flex-between">
+            <div className="sr-card" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
+              <div className="sr-flex-between" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
                 <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600 }}>
                   Editing Step {activeStepIndex}
                 </h3>
@@ -434,7 +437,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                 </div>
               </div>
 
-              <div className="sr-form-group">
+              <div className="sr-form-group" style={{ minWidth: 0 }}>
                 <label className="sr-label">Step Title</label>
                 <input 
                   type="text" 
@@ -449,12 +452,12 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
               </div>
 
               {/* Activity List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', minWidth: 0 }}>
                 <span className="sr-label">ACTIVITIES ({currentActiveStep.activities?.length || 0})</span>
 
                 {(!currentActiveStep.activities || currentActiveStep.activities.length === 0) ? (
                   <div className="sr-empty-state" style={{ height: '100px' }}>
-                    <p style={{ margin: 0, fontSize: '0.8rem' }}>No activities in this step yet. Click "Add Activity" above.</p>
+                    <p className="sr-empty-state-message" style={{ margin: 0, fontSize: '0.8rem' }}>No activities in this step yet. Click "Add Activity" above.</p>
                   </div>
                 ) : (
                   currentActiveStep.activities.map((act, actIdx) => {
@@ -462,14 +465,14 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                     const IconComponent = actMeta.icon;
 
                     return (
-                      <div key={act.id || actIdx} style={{ padding: '0.75rem', borderRadius: 'var(--sr-radius-md)', border: '1px solid var(--sr-color-border)', backgroundColor: 'var(--sr-color-bg-base)' }}>
-                        <div className="sr-flex-between" style={{ marginBottom: '0.5rem' }}>
-                          <div className="sr-flex-gap">
-                            <IconComponent size={15} style={{ color: actMeta.color }} />
+                      <div key={act.id || actIdx} style={{ padding: '0.75rem', borderRadius: 'var(--sr-radius-md)', border: '1px solid var(--sr-color-border)', backgroundColor: 'var(--sr-color-bg-base)', minWidth: 0 }}>
+                        <div className="sr-flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                          <div className="sr-flex-gap" style={{ flex: '1 1 140px', minWidth: 0 }}>
+                            <IconComponent size={15} style={{ color: actMeta.color, flexShrink: 0 }} />
                             <input 
                               type="text" 
                               className="sr-input" 
-                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600 }}
+                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, width: '100%', minWidth: 0 }}
                               value={act.name || ''} 
                               onChange={(e) => {
                                 const updatedSteps = [...scenario.steps];
@@ -481,7 +484,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                             />
                           </div>
 
-                          <div className="sr-flex-gap-sm">
+                          <div className="sr-flex-gap-sm" style={{ flexShrink: 0, marginLeft: 'auto' }}>
                             <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem' }} onClick={() => moveActivityWithinStep(actIdx, -1)} title="Move Up">
                               <ArrowUp size={12} />
                             </button>
@@ -491,7 +494,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
 
                             <select 
                               className="sr-input"
-                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', width: '90px' }}
+                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem', width: '85px' }}
                               value={activeStepIndex}
                               onChange={(e) => moveActivityToStep(actIdx, Number(e.target.value))}
                               title="Move to another step"
@@ -531,7 +534,8 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
           transition: 'flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s ease',
           padding: isRightPanelCollapsed ? '1rem 0.25rem' : '2rem',
           position: 'relative',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          minWidth: 0
         }}
       >
         <button 
@@ -550,12 +554,13 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
             display: 'flex', 
             flexDirection: 'column', 
             gap: '1.25rem',
-            width: '100%'
+            width: '100%',
+            minWidth: 0
           }}
         >
           {/* Metadata Card */}
-          <div className="sr-card" style={{ padding: '1rem' }}>
-            <div className="sr-flex-between" style={{ marginBottom: '0.75rem' }}>
+          <div className="sr-card" style={{ padding: '1rem', minWidth: 0 }}>
+            <div className="sr-flex-between" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <span className="sr-label">SCENARIO DESCRIPTION</span>
               
               <button 
@@ -575,7 +580,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
             </div>
 
             <div className="sr-form" style={{ gap: '0.75rem' }}>
-              <div className="sr-form-group">
+              <div className="sr-form-group" style={{ minWidth: 0 }}>
                 <label className="sr-label">Scenario Name</label>
                 <input 
                   type="text" 
@@ -584,7 +589,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                   onChange={(e) => setScenario(new ScenarioModel({ ...scenario, name: e.target.value }))} 
                 />
               </div>
-              <div className="sr-form-group">
+              <div className="sr-form-group" style={{ minWidth: 0 }}>
                 <label className="sr-label">Description</label>
                 <textarea 
                   className="sr-input sr-textarea-vertical" 
@@ -597,8 +602,8 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
           </div>
 
           {/* Base Components List */}
-          <div>
-            <div className="sr-flex-between" style={{ marginBottom: '0.75rem' }}>
+          <div style={{ minWidth: 0 }}>
+            <div className="sr-flex-between" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
               <div className="sr-flex-gap">
                 <Layers size={16} style={{ color: 'var(--sr-color-primary)' }} />
                 <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 600 }}>Base Components</h3>
@@ -649,7 +654,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
             </div>
 
             {/* Component Cards with Expandable Detailed Editors */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0 }}>
               {scenario.baseComponents.map((comp, idx) => {
                 let badgeClass = 'sr-badge-purple';
                 if (comp.type === 'nodeGraph') badgeClass = 'sr-badge-orange';
@@ -658,19 +663,24 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                 const isExpanded = expandedCompId === comp.id;
 
                 return (
-                  <div key={comp.id || idx} className="sr-card" style={{ padding: '0.85rem' }}>
-                    <div className="sr-flex-between">
-                      <div className="sr-flex-gap" style={{ flex: 1, marginRight: '0.5rem' }}>
-                        <span className={`sr-badge ${badgeClass}`} style={{ fontSize: '0.65rem' }}>
+                  <div key={comp.id || idx} className="sr-card" style={{ padding: '0.85rem', minWidth: 0 }}>
+                    <div className="sr-flex-between" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                      <div className="sr-flex-gap" style={{ flex: '1 1 160px', minWidth: 0 }}>
+                        <span className={`sr-badge ${badgeClass}`} style={{ fontSize: '0.65rem', flexShrink: 0 }}>
                           {comp.type}
                         </span>
                         
-                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                          {comp.title || comp.id}
-                        </span>
+                        <input 
+                          type="text" 
+                          className="sr-input" 
+                          style={{ padding: '0.2rem 0.4rem', fontSize: '0.85rem', fontWeight: 600, width: '100%', minWidth: 0 }}
+                          value={comp.title || ''} 
+                          onChange={(e) => updateBaseComponent(idx, { ...comp, title: e.target.value })} 
+                          placeholder="Component Title"
+                        />
                       </div>
 
-                      <div className="sr-flex-gap-sm">
+                      <div className="sr-flex-gap-sm" style={{ flexShrink: 0, marginLeft: 'auto' }}>
                         <button 
                           className="sr-btn sr-btn-secondary" 
                           style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }} 
@@ -703,7 +713,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
 
                     {/* Expandable Isolated Component Editor Container */}
                     {isExpanded && (
-                      <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--sr-color-border-subtle)' }}>
+                      <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--sr-color-border-subtle)', minWidth: 0 }}>
                         {comp.type === 'form' && (
                           <FormEditor component={comp} onChange={(updated) => updateBaseComponent(idx, updated)} />
                         )}

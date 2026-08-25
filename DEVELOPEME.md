@@ -16,6 +16,8 @@ Update Scenario Model Accordingly, and turn every one of them into their own iso
 1. implment logic for showcasePanel showing. (local storage stores this information)
 2. Also the app checks if you have any existing scenarios stored in your browser and add it to the tab for you. handle tablist overflowing too please. (never shrink them, always make sure they are truncated instead) if not enough space, add a drop down at the far end
 
+ok i should beba
+
 
 
 Reset Scenario should be moved to the individudal tabs rather than the header bleh. (or maybe not? maybe not needed.)
