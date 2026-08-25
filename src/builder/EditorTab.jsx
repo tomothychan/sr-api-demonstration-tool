@@ -25,9 +25,9 @@ import { storageService } from './StorageService';
 import { ScenarioModel, BaseComponent, Step, StepActivity } from './ScenarioModels';
 import NotificationBanner from '../components/NotificationBanner';
 
-import FormEditor from './components/FormEditor';
-import DbTableEditor from './components/DbTableEditor';
-import NodeGraphEditor from './components/NodeGraphEditor';
+import FormEditor from './components/editors/FormEditor';
+import DbTableEditor from './components/editors/DbTableEditor';
+import NodeGraphEditor from './components/editors/NodeGraphEditor';
 
 const ACTIVITY_TYPES = [
   { id: 'dbMutations', label: 'DB Mutations', icon: Database, color: '#10b981' },
