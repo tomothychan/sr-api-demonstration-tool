@@ -4,7 +4,7 @@ import InspectorPanel from '../components/InspectorPanel';
 import NodeDataFlowDiagram from '../components/NodeDataFlowDiagram';
 import LiveDatabaseTable from '../components/LiveDatabaseTable';
 
-export default function SuccessFactorsHandoffStoryboard() {
+export default function SuccessFactorsHandoffStoryboard({ onReset }) {
   const TOTAL_STEPS = 4;
 
   const FLOW_NODES = [

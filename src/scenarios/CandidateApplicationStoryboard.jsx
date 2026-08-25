@@ -4,7 +4,7 @@ import InspectorPanel from '../components/InspectorPanel';
 import NodeDataFlowDiagram from '../components/NodeDataFlowDiagram';
 import LiveDatabaseTable from '../components/LiveDatabaseTable';
 
-export default function CandidateApplicationStoryboard() {
+export default function CandidateApplicationStoryboard({ onReset }) {
   const TOTAL_STEPS = 4;
 
   const FLOW_NODES = [
@@ -203,6 +203,7 @@ export default function CandidateApplicationStoryboard() {
         isRunningAll={isRunningAll}
         onRunStep={handleRunStep}
         onToggleRunAll={handleToggleRunAll}
+        onReset={onReset}
       />
     </div>
   );

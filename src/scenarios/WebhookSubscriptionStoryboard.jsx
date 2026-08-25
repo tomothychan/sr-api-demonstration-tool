@@ -4,7 +4,7 @@ import InspectorPanel from '../components/InspectorPanel';
 import NodeDataFlowDiagram from '../components/NodeDataFlowDiagram';
 import LiveDatabaseTable from '../components/LiveDatabaseTable';
 
-export default function WebhookSubscriptionStoryboard() {
+export default function WebhookSubscriptionStoryboard({ onReset }) {
   const TOTAL_STEPS = 5;
 
   const FLOW_NODES = [
@@ -315,6 +315,7 @@ export default function WebhookSubscriptionStoryboard() {
         isRunningAll={isRunningAll}
         onRunStep={handleRunStep}
         onToggleRunAll={handleToggleRunAll}
+        onReset={onReset}
       />
     </div>
   );

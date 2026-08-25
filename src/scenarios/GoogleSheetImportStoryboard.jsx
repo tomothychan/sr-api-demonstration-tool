@@ -11,7 +11,7 @@ import InspectorPanel from '../components/InspectorPanel';
 import NodeDataFlowDiagram from '../components/NodeDataFlowDiagram';
 import LiveDatabaseTable from '../components/LiveDatabaseTable';
 
-export default function GoogleSheetImportStoryboard() {
+export default function GoogleSheetImportStoryboard({ onReset }) {
   const SPREADSHEET_ID = '1wsv_BMdI02I_VRXO3taTvdXUfcpe1gYYtkIkDYqnIT0';
   const SPREADSHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/`;
 
@@ -460,6 +460,7 @@ export default function GoogleSheetImportStoryboard() {
         isLoading={isLoading}
         onRunStep={handleRunStep}
         onToggleRunAll={handleToggleRunAll}
+        onReset={onReset}
       />
     </div>
   );

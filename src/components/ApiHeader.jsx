@@ -5,7 +5,6 @@ import sapLogo from '../assets/sap-logo.png';
 export default function ApiHeader({ 
   theme, 
   toggleTheme, 
-  onReset, 
   activeTab, 
   setActiveTab, 
   tabs,
@@ -53,13 +52,6 @@ export default function ApiHeader({
               </>
             )}
           </button>
-
-          {!isFunctionEmpty(onReset) && (
-            <button onClick={onReset} className="sr-btn sr-btn-secondary">
-              <RefreshCw className="sr-icon-sm" />
-              <span>Reset Scenario</span>
-            </button>
-          )}
         </div>
       </div>
 

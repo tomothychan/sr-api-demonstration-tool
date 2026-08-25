@@ -43,7 +43,6 @@ export default function ApiStoryboardApp() {
       <ApiHeader
         theme={theme}
         toggleTheme={toggleTheme}
-        onReset={handleReset}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         tabs={TABS}
@@ -52,19 +51,19 @@ export default function ApiStoryboardApp() {
       {/* Dynamic Storyboard Content Loader */}
       <main className="sr-content-area">
         {activeTab === 'candidate-app' && (
-          <CandidateApplicationStoryboard key={resetKey} />
+          <CandidateApplicationStoryboard key={resetKey} onReset={handleReset} />
         )}
 
         {activeTab === 'hired-webhook' && (
-          <SuccessFactorsHandoffStoryboard key={resetKey} />
+          <SuccessFactorsHandoffStoryboard key={resetKey} onReset={handleReset} />
         )}
 
         {activeTab === 'gsheet-import' && (
-          <GoogleSheetImportStoryBoard key={resetKey} />
+          <GoogleSheetImportStoryBoard key={resetKey} onReset={handleReset} />
         )}
 
         {activeTab === 'webhook-subscription' && (
-          <WebhookSubscriptionStoryboard key={resetKey} />
+          <WebhookSubscriptionStoryboard key={resetKey} onReset={handleReset} />
         )}
 
         {activeTab === 'empty-tab' && (

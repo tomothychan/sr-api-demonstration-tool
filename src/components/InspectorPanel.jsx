@@ -6,7 +6,8 @@ import {
   ArrowLeftCircleIcon, 
   Play, 
   Pause, 
-  StepForward 
+  StepForward,
+  RefreshCw
 } from 'lucide-react';
 import { smoothScrollTo } from './Scroll';
 
@@ -21,7 +22,8 @@ export default function InspectorPanel({
   isRunningAll = false,
   isLoading = false,
   onRunStep,
-  onToggleRunAll
+  onToggleRunAll,
+  onReset
 }) {
   const timelineRef = useRef(null);
 
@@ -111,6 +113,11 @@ export default function InspectorPanel({
           flexShrink: 0
         }}
       >
+        <button onClick={onReset} className="sr-btn sr-btn-secondary">
+          <RefreshCw className="sr-icon-sm" />
+          <span>Reset Scenario</span>
+        </button>
+        
         <button
           type="button"
           onClick={onRunStep}
@@ -141,6 +148,8 @@ export default function InspectorPanel({
             </>
           )}
         </button>
+
+        
       </div>
     </section>
   );
