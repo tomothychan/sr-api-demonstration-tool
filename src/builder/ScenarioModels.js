@@ -21,7 +21,7 @@ export class Step {
 
 export class BaseComponent {
   constructor({ id, type, title, ...extraProps } = {}) {
-    this.id = id || `${type}-${Date.now()}`;
+    this.id = id || `${type}_${Date.now()}`;
     this.type = type; // 'form' | 'nodeGraph' | 'dbTable'
     this.title = title || `New ${type} Component`;
     Object.assign(this, extraProps);
@@ -29,27 +29,32 @@ export class BaseComponent {
 
   static createForm(config = {}) {
     return new BaseComponent({
+      id: config.id || `form_${Date.now()}`,
       type: 'form',
-      title: config.title || 'Interactive Form Input',
-      fields: config.fields || [{ name: 'field1', label: 'Field Label', type: 'text', defaultValue: '' }]
+      title: config.title || 'New Form Component',
+      fields: config.fields || []
     });
   }
 
   static createNodeGraph(config = {}) {
     return new BaseComponent({
+      id: config.id || `nodeGraph_${Date.now()}`,
       type: 'nodeGraph',
-      title: config.title || 'System Node Architecture',
-      nodes: config.nodes || [{ id: 'node_1', label: 'Node 1', sublabel: 'Sublabel', icon: 'server', col: 1 }],
+      title: config.title || 'New Node Graph Component',
+      nodes: config.nodes || [],
       edges: config.edges || []
     });
   }
 
   static createDbTable(config = {}) {
     return new BaseComponent({
+      id: config.id || `dbTable_${Date.now()}`,
       type: 'dbTable',
-      title: config.title || 'Database State',
-      tableName: config.tableName || 'custom_table',
-      dbColumns: config.dbColumns || [{ key: 'id', label: 'ID' }]
+      title: config.title || 'New Database Table Component',
+      tableName: config.tableName || '',
+      dbColumns: config.dbColumns || [
+        { key: 'STATE', label: 'STATE', isFixed: true }
+      ]
     });
   }
 }
@@ -77,7 +82,15 @@ export class ScenarioModel {
       name: this.name,
       description: this.description,
       inspectorPanelEnabled: this.inspectorPanelEnabled,
-      baseComponents: this.baseComponents,
+      baseComponents: this.baseComponents.map((comp) => {
+        if (comp.type === 'nodeGraph' && Array.isArray(comp.edges)) {
+          return {
+            ...comp,
+            edges: comp.edges.filter((e) => e.from && e.from !== '---' && e.to && e.to !== '---')
+          };
+        }
+        return comp;
+      }),
       steps: this.steps
     };
   }

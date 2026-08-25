@@ -16,12 +16,18 @@ import {
   ArrowRightLeft,
   Activity,
   Code,
-  FolderOpen
+  FolderOpen,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 import { storageService } from './StorageService';
 import { ScenarioModel, BaseComponent, Step, StepActivity } from './ScenarioModels';
 import NotificationBanner from '../components/NotificationBanner';
+
+import FormEditor from './components/FormEditor';
+import DbTableEditor from './components/DbTableEditor';
+import NodeGraphEditor from './components/NodeGraphEditor';
 
 const ACTIVITY_TYPES = [
   { id: 'dbMutations', label: 'DB Mutations', icon: Database, color: '#10b981' },
@@ -36,6 +42,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
   const [notFound, setNotFound] = useState(false);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+  const [expandedCompId, setExpandedCompId] = useState(null);
   const [saveStatus, setSaveStatus] = useState('');
   const [showComponentDropdown, setShowComponentDropdown] = useState(false);
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
@@ -44,7 +51,6 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
   useEffect(() => {
     const initScenario = async () => {
       setNotFound(false);
-      
       const idToLoad = await storageService.getActiveEditingScenarioId();
 
       if (!idToLoad) {
@@ -130,13 +136,11 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     }
   };
 
-  // Base Component Check Helpers
   const scenarioHasNodeGraph = () => scenario?.baseComponents.some((c) => c.type === 'nodeGraph');
   const scenarioHasDbTable = () => scenario?.baseComponents.some((c) => c.type === 'dbTable');
   const scenarioHasForm = () => scenario?.baseComponents.some((c) => c.type === 'form');
   const scenarioHasInspectorPanel = () => scenario?.inspectorPanelEnabled;
 
-  // Check if an activity type should be disabled/crossed out
   const isActivityDisabled = (type) => {
     if (type === 'inspectorPanelEntry') return !scenarioHasInspectorPanel();
     if (type === 'dbMutations') return !scenarioHasDbTable();
@@ -236,7 +240,14 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
       ...scenario,
       baseComponents: [...scenario.baseComponents, newComp]
     }));
+    setExpandedCompId(newComp.id);
     setShowComponentDropdown(false);
+  };
+
+  const updateBaseComponent = (index, updatedComponent) => {
+    const updatedComps = [...scenario.baseComponents];
+    updatedComps[index] = new BaseComponent(updatedComponent);
+    setScenario(new ScenarioModel({ ...scenario, baseComponents: updatedComps }));
   };
 
   const moveComponent = (index, direction) => {
@@ -254,7 +265,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     
     const duplicated = new BaseComponent({
       ...JSON.parse(JSON.stringify(comp)),
-      id: `${comp.type}-${Date.now()}`
+      id: `${comp.type}_${Date.now()}`
     });
     const updated = [...scenario.baseComponents];
     updated.splice(index + 1, 0, duplicated);
@@ -266,7 +277,6 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     setScenario(new ScenarioModel({ ...scenario, baseComponents: updated }));
   };
 
-  // Render "No Scenario Selected" Empty State
   if (notFound || !scenario) {
     return (
       <div className="sr-panel" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -305,13 +315,13 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
       <section 
         className="sr-panel sr-panel-left" 
         style={{ 
-          flex: isRightPanelCollapsed ? '1 1 calc(100% - 48px)' : '1 1 60%', 
+          flex: isRightPanelCollapsed ? '1 1 calc(100% - 48px)' : '1 1 55%', 
           transition: 'flex 0.35s cubic-bezier(0.4, 0, 0.2, 1)' 
         }}
       >
         <div className="sr-panel-content" style={{ width: '100%', maxWidth: 'none', display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingBottom: '4rem' }}>
           
-          {/* Top Command Bar */}
+          {/* Command Bar */}
           <div className="sr-flex-between" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--sr-color-border)' }}>
             <div>
               <span className="sr-badge sr-badge-blue">Scenario Authoring Environment</span>
@@ -331,7 +341,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
             </div>
           </div>
 
-          {/* Main Step Builder Area */}
+          {/* Main Step Builder Grid */}
           <div className="sr-scenario-grid">
             
             {/* Step Sidebar */}
@@ -401,7 +411,6 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                     <span>Add Activity</span>
                   </button>
 
-                  {/* Activity Type Dropdown with Strikethroughs */}
                   {showActivityDropdown && (
                     <div className="sr-dropdown-menu">
                       {ACTIVITY_TYPES.map((actType) => {
@@ -499,7 +508,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                         </div>
 
                         <div style={{ fontSize: '0.75rem', color: 'var(--sr-color-text-subtle)', backgroundColor: 'var(--sr-color-bg-surface)', padding: '0.5rem', borderRadius: 'var(--sr-radius-sm)', border: '1px solid var(--sr-color-border-subtle)' }}>
-                          <span>[{act.type}] Component Settings Stub</span>
+                          <span>[{act.type}] Activity Config</span>
                         </div>
                       </div>
                     );
@@ -514,18 +523,17 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
         </div>
       </section>
 
-      {/* RIGHT PANEL */}
+      {/* RIGHT PANEL: Base Components Section */}
       <section 
         className="sr-panel sr-panel-right" 
         style={{ 
-          flex: isRightPanelCollapsed ? '0 0 48px' : '0 0 40%', 
+          flex: isRightPanelCollapsed ? '0 0 48px' : '1 1 45%', 
           transition: 'flex 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s ease',
           padding: isRightPanelCollapsed ? '1rem 0.25rem' : '2rem',
           position: 'relative',
           boxSizing: 'border-box'
         }}
       >
-        {/* Toggle Circle Button */}
         <button 
           onClick={() => setIsRightPanelCollapsed(!isRightPanelCollapsed)}
           className="sr-panel-toggle-btn"
@@ -534,7 +542,6 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
           <span className={`sr-panel-toggle-dot ${isRightPanelCollapsed ? 'sr-panel-toggle-dot-active' : ''}`} />
         </button>
 
-        {/* Inner Panel Content */}
         <div 
           style={{ 
             opacity: isRightPanelCollapsed ? 0 : 1, 
@@ -589,7 +596,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
             </div>
           </div>
 
-          {/* Base Components Section */}
+          {/* Base Components List */}
           <div>
             <div className="sr-flex-between" style={{ marginBottom: '0.75rem' }}>
               <div className="sr-flex-gap">
@@ -641,12 +648,14 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
               </div>
             </div>
 
-            {/* Base Component Cards */}
+            {/* Component Cards with Expandable Detailed Editors */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {scenario.baseComponents.map((comp, idx) => {
                 let badgeClass = 'sr-badge-purple';
                 if (comp.type === 'nodeGraph') badgeClass = 'sr-badge-orange';
                 else if (comp.type === 'dbTable') badgeClass = 'sr-badge-green';
+
+                const isExpanded = expandedCompId === comp.id;
 
                 return (
                   <div key={comp.id || idx} className="sr-card" style={{ padding: '0.85rem' }}>
@@ -656,20 +665,21 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                           {comp.type}
                         </span>
                         
-                        <input 
-                          type="text" 
-                          className="sr-input" 
-                          style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, flex: 1 }}
-                          value={comp.title || ''} 
-                          onChange={(e) => {
-                            const updated = [...scenario.baseComponents];
-                            updated[idx] = new BaseComponent({ ...comp, title: e.target.value });
-                            setScenario(new ScenarioModel({ ...scenario, baseComponents: updated }));
-                          }}
-                        />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                          {comp.title || comp.id}
+                        </span>
                       </div>
 
                       <div className="sr-flex-gap-sm">
+                        <button 
+                          className="sr-btn sr-btn-secondary" 
+                          style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }} 
+                          onClick={() => setExpandedCompId(isExpanded ? null : comp.id)}
+                        >
+                          {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                          <span>{isExpanded ? 'Close' : 'Configure'}</span>
+                        </button>
+
                         <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem 0.35rem' }} onClick={() => moveComponent(idx, -1)} title="Move Up">
                           <ArrowUp size={12} />
                         </button>
@@ -690,6 +700,21 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                         </button>
                       </div>
                     </div>
+
+                    {/* Expandable Isolated Component Editor Container */}
+                    {isExpanded && (
+                      <div style={{ marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--sr-color-border-subtle)' }}>
+                        {comp.type === 'form' && (
+                          <FormEditor component={comp} onChange={(updated) => updateBaseComponent(idx, updated)} />
+                        )}
+                        {comp.type === 'dbTable' && (
+                          <DbTableEditor component={comp} onChange={(updated) => updateBaseComponent(idx, updated)} />
+                        )}
+                        {comp.type === 'nodeGraph' && (
+                          <NodeGraphEditor component={comp} onChange={(updated) => updateBaseComponent(idx, updated)} onNotification={(notif) => setNotification(notif)} />
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
