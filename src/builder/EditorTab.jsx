@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Trash2, 
@@ -53,6 +53,14 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
   const [notification, setNotification] = useState(null);
 
+  // Reference for tracking last saved snapshot
+  const lastSavedJsonRef = useRef(null);
+
+  // Compute current JSON & Dirty State
+  const currentScenarioJson = scenario ? JSON.stringify(scenario.toJSON()) : null;
+  const isDirty = Boolean(scenario && lastSavedJsonRef.current && currentScenarioJson !== lastSavedJsonRef.current);
+
+  // Load Initial Scenario
   useEffect(() => {
     const initScenario = async () => {
       setNotFound(false);
@@ -65,7 +73,9 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
 
       const loadedData = await storageService.loadScenario(idToLoad);
       if (loadedData) {
-        setScenario(new ScenarioModel(loadedData));
+        const loadedModel = new ScenarioModel(loadedData);
+        setScenario(loadedModel);
+        lastSavedJsonRef.current = JSON.stringify(loadedModel.toJSON());
         setNotFound(false);
       } else {
         setNotFound(true);
@@ -74,6 +84,54 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
 
     initScenario();
   }, []);
+
+  // 1. Browser Tab Refresh / Close Protection
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = ''; // Required for native browser dialog trigger
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  // 2. Debounced Autosave Effect (8 Seconds after last edit)
+  useEffect(() => {
+    if (!isDirty || !scenario) return;
+
+    const autosaveTimer = setTimeout(async () => {
+      const jsonToSave = scenario.toJSON();
+      const res = await storageService.saveScenario(jsonToSave);
+      if (res.success) {
+        lastSavedJsonRef.current = JSON.stringify(jsonToSave);
+        setSaveStatus('Autosaved');
+        if (onSaveSuccess) onSaveSuccess(jsonToSave);
+        setTimeout(() => setSaveStatus(''), 2500);
+      }
+    }, 8000);
+
+    return () => clearTimeout(autosaveTimer);
+  }, [scenario, isDirty, onSaveSuccess]);
+
+  // 3. In-App Guarded Navigation
+  const handleGuardedNavigation = (targetAction) => {
+    if (!isDirty) {
+      if (targetAction) targetAction();
+      return;
+    }
+
+    setNotification({
+      type: 'warning',
+      message: 'You have unsaved changes in this scenario. Are you sure you want to leave?',
+      confirmText: 'Discard & Leave',
+      onConfirm: () => {
+        if (targetAction) targetAction();
+      }
+    });
+  };
 
   const toggleComponentExpand = (compId) => {
     setExpandedCompIds((prev) => ({
@@ -92,16 +150,19 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
   const handleCreateNewAndLoad = async () => {
     const newScenario = await storageService.handleCreateNewScenario();
     setScenario(newScenario);
+    lastSavedJsonRef.current = JSON.stringify(newScenario.toJSON());
     setActiveStepIndex(0);
     setNotFound(false);
   };
 
   const handleSaveToBrowser = async () => {
     if (!scenario) return;
-    const res = await storageService.saveScenario(scenario.toJSON());
+    const jsonToSave = scenario.toJSON();
+    const res = await storageService.saveScenario(jsonToSave);
     if (res.success) {
+      lastSavedJsonRef.current = JSON.stringify(jsonToSave);
       setSaveStatus('Saved!');
-      if (onSaveSuccess) onSaveSuccess(scenario.toJSON());
+      if (onSaveSuccess) onSaveSuccess(jsonToSave);
       setTimeout(() => setSaveStatus(''), 2500);
     } else {
       setSaveStatus('Error saving');
@@ -376,7 +437,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
 
   if (notFound || !scenario) {
     return <NoScenarioSlate 
-      onNavigateToBrowser={onNavigateToBrowser} 
+      onNavigateToBrowser={() => handleGuardedNavigation(onNavigateToBrowser)} 
       handleCreateNewAndLoad={handleCreateNewAndLoad} 
       isEditor={true} />;
   }
@@ -404,20 +465,24 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
           
           {/* Command Bar */}
           <div className="sr-flex-between" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--sr-color-border)', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div>
+            <div className="sr-flex-gap" style={{ flexWrap: 'wrap' }}>
               <span className="sr-badge sr-badge-blue">Scenario Authoring Environment</span>
-              <h2 className="sr-title" style={{ marginTop: '0.25rem' }}>Step Activity Timeline</h2>
+              {isDirty && (
+                <span className="sr-badge" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+                  Unsaved Changes
+                </span>
+              )}
             </div>
 
             <div className="sr-flex-gap" style={{ flexWrap: 'wrap' }}>
-              <button className="sr-btn sr-btn-secondary" onClick={onSimulateScenario} style={{ gap: '0.35rem' }}>
+              <button className="sr-btn sr-btn-secondary" onClick={() => handleGuardedNavigation(onSimulateScenario)} style={{ gap: '0.35rem' }}>
                 <Play size={16} />
                 <span className="sr-btn-text">Simulate</span>
               </button>
 
               <button className="sr-btn sr-btn-primary" onClick={handleSaveToBrowser}>
                 <Save size={16} />
-                <span>{saveStatus || 'Save to Browser'}</span>
+                <span>{saveStatus || (isDirty ? 'Save to Browser *' : 'Saved')}</span>
               </button>
             </div>
           </div>
