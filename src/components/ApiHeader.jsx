@@ -54,6 +54,38 @@ export default function ApiHeader({
               </>
             )}
           </button>
+
+          {goToShowcase && (
+            <button 
+              type="button"
+              onClick={() => {
+                const baseUrl = import.meta.env.BASE_URL || '/';
+                const targetUrl = new URL(baseUrl, window.location.origin).href;
+                window.location.href = targetUrl;
+              }}
+              className="sr-btn sr-btn-primary"
+              title="Go to Showcase"
+            >
+              <Upload className="sr-icon-sm" />
+              <span>Showcase your Scenarios!</span>
+            </button>
+          )}
+
+          {goToBuilder && (
+            <button 
+              type="button"
+              onClick={() => {
+                const baseUrl = import.meta.env.BASE_URL || '/';
+                const targetUrl = new URL(`${baseUrl}builder`.replace(/\/+/g, '/'), window.location.origin).href;
+                window.location.href = targetUrl;
+              }}
+              className="sr-btn sr-btn-primary"
+              title="Go to Builder"
+            >
+              <Download className="sr-icon-sm" />
+              <span>Build your Scenarios!</span>
+            </button>
+          )}
         </div>
       </div>
 

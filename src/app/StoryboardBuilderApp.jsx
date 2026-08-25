@@ -73,6 +73,7 @@ export default function StoryboardBuilderApp({ startingTab = 'catalog' }) {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         tabs={TABS}
+        goToShowcase={true}
       />
 
       {/* Dynamic Storyboard Content Loader */}

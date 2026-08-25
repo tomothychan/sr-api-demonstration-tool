@@ -76,7 +76,7 @@ export default function InspectorPanel({
         {logs.length === 0 ? (
           <div className="sr-empty-state">
             <ArrowLeftCircleIcon className="sr-icon-lg sr-pulse" />
-            <p>{emptyMessage}</p>
+            <p className="sr-empty-state-wrap">{emptyMessage}</p>
           </div>
         ) : (
           logs.map((log) => (

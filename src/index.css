@@ -363,6 +363,17 @@
   white-space: nowrap;
 }
 
+.sr-empty-state-wrap {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  text-align: center;
+  white-space: normal;
+}
+
 .sr-log-card {
   background-color: var(--sr-color-bg-surface);
   border: 1px solid var(--sr-color-border);
