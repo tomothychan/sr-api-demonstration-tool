@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import ApiHeader from '../components/ApiHeader';
+import { Navigate } from 'react-router-dom';
 import CandidateApplicationStoryboard from '../scenarios/CandidateApplicationStoryboard';
 import SuccessFactorsHandoffStoryboard from '../scenarios/SuccessFactorsHandoffStoryboard';
 import GoogleSheetImportStoryBoard from '../scenarios/GoogleSheetImportStoryboard';
 import WebhookSubscriptionStoryboard from '../scenarios/WebhookSubscriptionStoryboard';
+import { storageService } from '../builder/StorageService';
 import '../index.css';
 
-export default function ApiStoryboardApp() {
+export default function ApiStoryboardApp({ startingTab = 'candidate-app' }) {
   // Theme state  
   const [theme, setTheme] = useState(() => localStorage.getItem('sr-theme') || 'dark');
   
   // Navigation tabs state
-  const [activeTab, setActiveTab] = useState('candidate-app');
+  const [activeTab, setActiveTab] = useState(startingTab);
   
   // Reset trigger key (changing key forces child component to remount/reset)
   const [resetKey, setResetKey] = useState(0);
@@ -37,6 +39,17 @@ export default function ApiStoryboardApp() {
     { id: 'webhook-subscription', number: '04', label: 'Webhook & Automated Screening' },
     { id: 'empty-tab', number: '05', label: 'Empty Tab' }
   ];
+
+  const checkStartTabExist = () => { // update logic later
+    const validTabs = ['candidate-app', 'hired-webhook', 'gsheet-import', 'webhook-subscription', 'empty-tab'];
+    return validTabs.includes(startingTab);
+  };
+
+  if (!checkStartTabExist()) {
+    return (
+      <Navigate to="/builder" replace />
+    );
+  }
 
   return (
     <div className="sr-app-container">

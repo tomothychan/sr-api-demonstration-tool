@@ -8,6 +8,8 @@ export default function ApiHeader({
   activeTab, 
   setActiveTab, 
   tabs,
+  goToShowcase,
+  goToBuilder
 }) {
 
   const isFunctionEmpty = (fn) => {

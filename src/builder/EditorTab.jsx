@@ -39,7 +39,7 @@ const ACTIVITY_TYPES = [
   { id: 'inspectorPanelEntry', label: 'Inspector Panel Entry', icon: Code, color: '#ec4899' }
 ];
 
-export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
+export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimulateScenario }) {
   const [scenario, setScenario] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -410,7 +410,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
             </div>
 
             <div className="sr-flex-gap" style={{ flexWrap: 'wrap' }}>
-              <button className="sr-btn sr-btn-secondary">
+              <button className="sr-btn sr-btn-secondary" onClick={onSimulateScenario} style={{ gap: '0.35rem' }}>
                 <Play size={16} />
                 <span className="sr-btn-text">Simulate</span>
               </button>

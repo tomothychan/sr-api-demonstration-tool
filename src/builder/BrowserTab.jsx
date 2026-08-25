@@ -8,7 +8,8 @@ import {
   Check, 
   X, 
   Search,
-  Plus
+  Plus,
+  ExternalLink
 } from 'lucide-react';
 
 import { storageService } from './StorageService';
@@ -23,21 +24,21 @@ const BUILT_IN_SCENARIOS = [
     isBuiltIn: true
   },
   {
-    id: 'google-sheets',
+    id: 'gsheet-import',
     name: 'Google Sheets Batch Sourcing',
     description: 'ETL worker streaming rows from Google Sheets into OpenAPI POST payloads.',
     type: 'jsx',
     isBuiltIn: true
   },
   {
-    id: 'successfactors',
+    id: 'hired-webhook',
     name: 'SAP SuccessFactors Handoff',
     description: 'Recruiter hire events converted to SuccessFactors OData API records.',
     type: 'jsx',
     isBuiltIn: true
   },
   {
-    id: 'webhook-sub',
+    id: 'webhook-subscription',
     name: 'Webhook & Automated Screening',
     description: 'Bidirectional webhook subscriptions with downstream DB and screening triggers.',
     type: 'jsx',
@@ -290,14 +291,33 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
 
                 {/* Right Side */}
                 <div className="sr-flex-gap" style={{ flexShrink: 0 }}>
-                  <button 
-                    className="sr-btn sr-btn-primary" 
-                    style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem' }}
-                    onClick={() => onSimulateScenario && onSimulateScenario(sc.id)}
-                  >
-                    <Play size={13} />
-                    <span>Simulate</span>
-                  </button>
+                  {sc.isBuiltIn ? (
+                    <button 
+                      className={`sr-btn ${sc.showcaseEnabled ? 'sr-btn-primary' : 'sr-btn-disabled'}`}
+                      style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem' }}
+                      disabled={!sc.showcaseEnabled}
+                      onClick={() => {
+                        const scenarioUrl = new URL(
+                          sc.id,
+                          `${window.location.origin}${import.meta.env.BASE_URL}`
+                        ).href;
+                        window.open(scenarioUrl, '_blank', 'noopener,noreferrer');
+                      }}
+                      title={!sc.showcaseEnabled ? 'Check showcase panel checkbox to enable demonstration' : 'Go to Demonstration'}
+                    >
+                      <ExternalLink size={13} />
+                      <span>Go to Demonstration</span>
+                    </button>
+                  ) : (
+                    <button 
+                      className="sr-btn sr-btn-primary" 
+                      style={{ padding: '0.4rem 0.85rem', fontSize: '0.75rem' }}
+                      onClick={() => onSimulateScenario && onSimulateScenario(sc.id)}
+                    >
+                      <Play size={13} />
+                      <span>Simulate</span>
+                    </button>
+                  )}
 
                   {sc.type === 'json' && (
                     <>

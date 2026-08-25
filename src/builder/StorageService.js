@@ -10,6 +10,7 @@ const DB_VERSION = 1;
 const STORE_NAME = 'scenarios';
 const SHOWCASE_STORAGE_KEY = 'sr_showcase_scenario_ids_v1';
 const ACTIVE_EDITING_KEY = 'sr_active_editing_scenario_id_v1';
+const ACTIVE_SIMULATING_KEY = 'sr_active_simulating_scenario_id_v1';
 
 /**
  * Helper to open or initialize the IndexedDB instance.
@@ -175,6 +176,35 @@ export const storageService = {
       return { success: true };
     } catch (error) {
       console.error('Storage Service Error [setActiveEditingScenarioId]:', error);
+      return { success: false, error };
+    }
+  },
+
+  /**
+   * Get the ID of the scenario currently selected for simulating.
+   */
+  async getActiveSimulatingScenarioId() {
+    try {
+      return localStorage.getItem(ACTIVE_SIMULATING_KEY) || null;
+    } catch (error) {
+      console.error('Storage Service Error [getActiveSimulatingScenarioId]:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Set the ID of the scenario currently selected for simulating.
+   */
+  async setActiveSimulatingScenarioId(scenarioId) {
+    try {
+      if (scenarioId) {
+        localStorage.setItem(ACTIVE_SIMULATING_KEY, scenarioId);
+      } else {
+        localStorage.removeItem(ACTIVE_SIMULATING_KEY);
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('Storage Service Error [setActiveSimulatingScenarioId]:', error);
       return { success: false, error };
     }
   },
