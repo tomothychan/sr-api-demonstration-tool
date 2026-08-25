@@ -7,7 +7,44 @@ export class StepActivity {
     this.id = id;
     this.type = type; // 'dbMutations' | 'PacketMovement' | 'NodeUpdate' | 'EdgeUpdate' | 'inspectorPanelEntry'
     this.name = name || `New ${type} Activity`;
-    this.config = config;
+    this.config = StepActivity.getDefaultConfig(type, config);
+  }
+
+  static getDefaultConfig(type, overrideConfig = {}) {
+    const defaults = {
+      NodeUpdate: {
+        nodeGraphId: '',
+        nodeId: '',
+        state: 'active' // 'inactive' | 'active' | 'completed' | 'updated' | 'error'
+      },
+      EdgeUpdate: {
+        nodeGraphId: '',
+        fromNode: '',
+        toNode: '',
+        state: 'active',
+        color: '#3b82f6'
+      },
+      PacketMovement: {
+        nodeGraphId: '',
+        fromNode: '',
+        toNode: '',
+        label: 'POST /event',
+        direction: 'forward', // 'forward' | 'reverse'
+        color: '#3b82f6'
+      },
+      dbMutations: {
+        dbTableId: '',
+        records: []
+      },
+      inspectorPanelEntry: {
+        title: 'Execution Log Entry',
+        details: 'Operation performed successfully.',
+        payloadText: '{\n  "status": 200,\n  "success": true\n}',
+        statusType: 'action' // 'action' | 'process' | 'success'
+      }
+    };
+
+    return { ...(defaults[type] || {}), ...overrideConfig };
   }
 }
 
@@ -51,7 +88,7 @@ export class BaseComponent {
       id: config.id || `dbTable_${Date.now()}`,
       type: 'dbTable',
       title: config.title || 'New Database Table Component',
-      tableName: config.tableName || '',
+      tableName: config.tableName || 'Company DB',
       dbColumns: config.dbColumns || [
         { key: 'STATE', label: 'STATE', isFixed: true }
       ]

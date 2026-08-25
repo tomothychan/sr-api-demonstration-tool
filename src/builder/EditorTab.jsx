@@ -14,7 +14,7 @@ import {
   Layers, 
   Play,
   ArrowRightLeft,
-  Activity,
+  Activity as ActivityIcon,
   Code,
   FolderOpen,
   ChevronDown,
@@ -28,12 +28,13 @@ import NotificationBanner from '../components/NotificationBanner';
 import FormEditor from './components/editors/FormEditor';
 import DbTableEditor from './components/editors/DbTableEditor';
 import NodeGraphEditor from './components/editors/NodeGraphEditor';
+import ActivityEditor from './components/activities/ActivityEditor';
 
 const ACTIVITY_TYPES = [
   { id: 'dbMutations', label: 'DB Mutations', icon: Database, color: '#10b981' },
   { id: 'PacketMovement', label: 'Packet Movement', icon: ArrowRightLeft, color: '#3b82f6' },
   { id: 'NodeUpdate', label: 'Node Update', icon: Network, color: '#f59e0b' },
-  { id: 'EdgeUpdate', label: 'Edge Update', icon: Activity, color: '#a855f7' },
+  { id: 'EdgeUpdate', label: 'Edge Update', icon: ActivityIcon, color: '#a855f7' },
   { id: 'inspectorPanelEntry', label: 'Inspector Panel Entry', icon: Code, color: '#ec4899' }
 ];
 
@@ -42,7 +43,10 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
   const [notFound, setNotFound] = useState(false);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
-  const [expandedCompId, setExpandedCompId] = useState(null);
+  
+  const [expandedCompIds, setExpandedCompIds] = useState({});
+  const [expandedActivityIds, setExpandedActivityIds] = useState({});
+
   const [saveStatus, setSaveStatus] = useState('');
   const [showComponentDropdown, setShowComponentDropdown] = useState(false);
   const [showActivityDropdown, setShowActivityDropdown] = useState(false);
@@ -69,6 +73,20 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
 
     initScenario();
   }, []);
+
+  const toggleComponentExpand = (compId) => {
+    setExpandedCompIds((prev) => ({
+      ...prev,
+      [compId]: !prev[compId]
+    }));
+  };
+
+  const toggleActivityExpand = (actId) => {
+    setExpandedActivityIds((prev) => ({
+      ...prev,
+      [actId]: !prev[actId]
+    }));
+  };
 
   const handleCreateNewAndLoad = async () => {
     const newScenario = await storageService.handleCreateNewScenario();
@@ -176,7 +194,21 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     const currentStep = scenario.steps[activeStepIndex];
     if (!currentStep) return;
 
-    const newActivity = new StepActivity({ type, name: `New ${type} Activity` });
+    const firstGraph = scenario.baseComponents.find((c) => c.type === 'nodeGraph');
+    const firstDbTable = scenario.baseComponents.find((c) => c.type === 'dbTable');
+
+    const newActivity = new StepActivity({ 
+      type, 
+      name: `New ${type} Activity`,
+      config: StepActivity.getDefaultConfig(type, {
+        nodeGraphId: firstGraph?.id || '',
+        dbTableId: firstDbTable?.id || '',
+        fromNode: firstGraph?.nodes?.[0]?.id || '',
+        toNode: firstGraph?.nodes?.[1]?.id || '',
+        nodeId: firstGraph?.nodes?.[0]?.id || ''
+      })
+    });
+
     const updatedSteps = [...scenario.steps];
     updatedSteps[activeStepIndex] = new Step({
       ...currentStep,
@@ -184,7 +216,18 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     });
 
     setScenario(new ScenarioModel({ ...scenario, steps: updatedSteps }));
+    setExpandedActivityIds((prev) => ({ ...prev, [newActivity.id]: true }));
     setShowActivityDropdown(false);
+  };
+
+  const updateActivity = (actIndex, updatedActivity) => {
+    const currentStep = scenario.steps[activeStepIndex];
+    const updatedActs = [...currentStep.activities];
+    updatedActs[actIndex] = new StepActivity(updatedActivity);
+
+    const updatedSteps = [...scenario.steps];
+    updatedSteps[activeStepIndex] = new Step({ ...currentStep, activities: updatedActs });
+    setScenario(new ScenarioModel({ ...scenario, steps: updatedSteps }));
   };
 
   const moveActivityWithinStep = (actIndex, direction) => {
@@ -240,7 +283,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
       ...scenario,
       baseComponents: [...scenario.baseComponents, newComp]
     }));
-    setExpandedCompId(newComp.id);
+    setExpandedCompIds((prev) => ({ ...prev, [newComp.id]: true }));
     setShowComponentDropdown(false);
   };
 
@@ -272,9 +315,62 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
     setScenario(new ScenarioModel({ ...scenario, baseComponents: updated }));
   };
 
+  const isActivityReferencingComponent = (act, compId) => {
+    return (
+      act.config?.nodeGraphId === compId ||
+      act.config?.dbTableId === compId ||
+      act.config?.componentId === compId ||
+      act.config?.formId === compId
+    );
+  };
+
+  const countReferencingActivities = (compId) => {
+    let count = 0;
+    scenario.steps.forEach((step) => {
+      step.activities.forEach((act) => {
+        if (isActivityReferencingComponent(act, compId)) {
+          count++;
+        }
+      });
+    });
+    return count;
+  };
+
   const deleteComponent = (index) => {
-    const updated = scenario.baseComponents.filter((_, idx) => idx !== index);
-    setScenario(new ScenarioModel({ ...scenario, baseComponents: updated }));
+    const comp = scenario.baseComponents[index];
+    if (!comp) return;
+
+    const refCount = countReferencingActivities(comp.id);
+
+    const executeDelete = () => {
+      const updatedComps = scenario.baseComponents.filter((_, idx) => idx !== index);
+      
+      const updatedSteps = scenario.steps.map((step) => {
+        const filteredActivities = step.activities.filter(
+          (act) => !isActivityReferencingComponent(act, comp.id)
+        );
+        return new Step({ ...step, activities: filteredActivities });
+      });
+
+      setScenario(new ScenarioModel({ 
+        ...scenario, 
+        baseComponents: updatedComps, 
+        steps: updatedSteps 
+      }));
+    };
+
+    if (refCount > 0) {
+      setNotification({
+        type: 'warning',
+        message: `Deleting "${comp.title || comp.id}" will also delete ${refCount} activity/activities referencing it across the timeline.`,
+        confirmText: 'Delete Component & Activities',
+        onConfirm: () => {
+          executeDelete();
+        }
+      });
+    } else {
+      executeDelete();
+    }
   };
 
   if (notFound || !scenario) {
@@ -463,10 +559,11 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                   currentActiveStep.activities.map((act, actIdx) => {
                     const actMeta = ACTIVITY_TYPES.find((t) => t.id === act.type) || ACTIVITY_TYPES[0];
                     const IconComponent = actMeta.icon;
+                    const isExpanded = Boolean(expandedActivityIds[act.id]);
 
                     return (
                       <div key={act.id || actIdx} style={{ padding: '0.75rem', borderRadius: 'var(--sr-radius-md)', border: '1px solid var(--sr-color-border)', backgroundColor: 'var(--sr-color-bg-base)', minWidth: 0 }}>
-                        <div className="sr-flex-between" style={{ marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <div className="sr-flex-between" style={{ marginBottom: isExpanded ? '0.5rem' : 0, flexWrap: 'wrap', gap: '0.5rem' }}>
                           <div className="sr-flex-gap" style={{ flex: '1 1 140px', minWidth: 0 }}>
                             <IconComponent size={15} style={{ color: actMeta.color, flexShrink: 0 }} />
                             <input 
@@ -474,17 +571,20 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                               className="sr-input" 
                               style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, width: '100%', minWidth: 0 }}
                               value={act.name || ''} 
-                              onChange={(e) => {
-                                const updatedSteps = [...scenario.steps];
-                                const updatedActs = [...currentActiveStep.activities];
-                                updatedActs[actIdx] = new StepActivity({ ...act, name: e.target.value });
-                                updatedSteps[activeStepIndex] = new Step({ ...currentActiveStep, activities: updatedActs });
-                                setScenario(new ScenarioModel({ ...scenario, steps: updatedSteps }));
-                              }}
+                              onChange={(e) => updateActivity(actIdx, { ...act, name: e.target.value })}
                             />
                           </div>
 
                           <div className="sr-flex-gap-sm" style={{ flexShrink: 0, marginLeft: 'auto' }}>
+                            <button 
+                              className="sr-btn sr-btn-secondary" 
+                              style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }} 
+                              onClick={() => toggleActivityExpand(act.id)}
+                            >
+                              {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                              <span>{isExpanded ? 'Close' : 'Configure'}</span>
+                            </button>
+
                             <button className="sr-btn sr-btn-secondary" style={{ padding: '0.2rem' }} onClick={() => moveActivityWithinStep(actIdx, -1)} title="Move Up">
                               <ArrowUp size={12} />
                             </button>
@@ -510,9 +610,16 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                           </div>
                         </div>
 
-                        <div style={{ fontSize: '0.75rem', color: 'var(--sr-color-text-subtle)', backgroundColor: 'var(--sr-color-bg-surface)', padding: '0.5rem', borderRadius: 'var(--sr-radius-sm)', border: '1px solid var(--sr-color-border-subtle)' }}>
-                          <span>[{act.type}] Activity Config</span>
-                        </div>
+                        {/* Collapsible Modular Activity Editor */}
+                        {isExpanded && (
+                          <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', backgroundColor: 'var(--sr-color-bg-surface)', padding: '0.65rem', borderRadius: 'var(--sr-radius-sm)', border: '1px solid var(--sr-color-border-subtle)', minWidth: 0 }}>
+                            <ActivityEditor 
+                              activity={act} 
+                              baseComponents={scenario.baseComponents} 
+                              onChange={(updatedAct) => updateActivity(actIdx, updatedAct)} 
+                            />
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -660,7 +767,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                 if (comp.type === 'nodeGraph') badgeClass = 'sr-badge-orange';
                 else if (comp.type === 'dbTable') badgeClass = 'sr-badge-green';
 
-                const isExpanded = expandedCompId === comp.id;
+                const isExpanded = Boolean(expandedCompIds[comp.id]);
 
                 return (
                   <div key={comp.id || idx} className="sr-card" style={{ padding: '0.85rem', minWidth: 0 }}>
@@ -684,7 +791,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser }) {
                         <button 
                           className="sr-btn sr-btn-secondary" 
                           style={{ padding: '0.2rem 0.4rem', fontSize: '0.7rem' }} 
-                          onClick={() => setExpandedCompId(isExpanded ? null : comp.id)}
+                          onClick={() => toggleComponentExpand(comp.id)}
                         >
                           {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                           <span>{isExpanded ? 'Close' : 'Configure'}</span>
