@@ -350,6 +350,18 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
   };
 
   const updateBaseComponent = (index, updatedComponent) => {
+    const oldId = scenario.baseComponents[index]?.id;
+    const newId = updatedComponent.id;
+
+    // Preserve expansion state across Component ID renames
+    if (oldId && newId && oldId !== newId && expandedCompIds[oldId]) {
+      setExpandedCompIds((prev) => {
+        const next = { ...prev, [newId]: prev[oldId] };
+        delete next[oldId];
+        return next;
+      });
+    }
+
     const updatedComps = [...scenario.baseComponents];
     updatedComps[index] = new BaseComponent(updatedComponent);
     setScenario(new ScenarioModel({ ...scenario, baseComponents: updatedComps }));
@@ -466,7 +478,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
           {/* Command Bar */}
           <div className="sr-flex-between" style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--sr-color-border)', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div className="sr-flex-gap" style={{ flexWrap: 'wrap' }}>
-              <span className="sr-badge sr-badge-blue">Scenario Authoring Environment</span>
+              <span className="sr-badge sr-badge-blue">Scenario Timeline</span>
               {isDirty && (
                 <span className="sr-badge" style={{ backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
                   Unsaved Changes
@@ -475,11 +487,10 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
             </div>
 
             <div className="sr-flex-gap" style={{ flexWrap: 'wrap' }}>
-              <button className="sr-btn sr-btn-secondary" onClick={() => handleGuardedNavigation(onSimulateScenario)} style={{ gap: '0.35rem' }}>
+              <button className="sr-btn sr-btn-secondary" onClick={() => handleGuardedNavigation(onSimulateScenario(scenario.id))} style={{ gap: '0.35rem' }}>
                 <Play size={16} />
                 <span className="sr-btn-text">Simulate</span>
               </button>
-
               <button className="sr-btn sr-btn-primary" onClick={handleSaveToBrowser}>
                 <Save size={16} />
                 <span>{saveStatus || (isDirty ? 'Save to Browser *' : 'Saved')}</span>
@@ -819,7 +830,7 @@ export default function EditorTab({ onSaveSuccess, onNavigateToBrowser, onSimula
                 const isExpanded = Boolean(expandedCompIds[comp.id]);
 
                 return (
-                  <div key={comp.id || idx} className="sr-card" style={{ padding: '0.85rem', minWidth: 0 }}>
+                  <div key={comp._stableKey || `comp-slot-${idx}`} className="sr-card" style={{ padding: '0.85rem', minWidth: 0 }}>
                     <div className="sr-flex-between" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
                       <div className="sr-flex-gap" style={{ flex: '1 1 160px', minWidth: 0 }}>
                         <span className={`sr-badge ${badgeClass}`} style={{ fontSize: '0.65rem', flexShrink: 0 }}>

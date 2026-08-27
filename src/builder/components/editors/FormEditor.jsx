@@ -50,7 +50,7 @@ export default function FormEditor({ component, onChange }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', minWidth: 0 }}>
       {/* Simulation Title at the top */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Simulation Title (Label)</label>
           <input 
@@ -59,15 +59,6 @@ export default function FormEditor({ component, onChange }) {
             value={component.title || ''} 
             onChange={(e) => updateComponent({ title: e.target.value })} 
             placeholder="e.g. Interactive Form Input"
-          />
-        </div>
-        <div className="sr-form-group" style={{ minWidth: 0 }}>
-          <label className="sr-label">Component ID (Target Key)</label>
-          <input 
-            type="text" 
-            className="sr-input" 
-            value={component.id || ''} 
-            onChange={(e) => updateComponent({ id: e.target.value })} 
           />
         </div>
       </div>
@@ -90,7 +81,7 @@ export default function FormEditor({ component, onChange }) {
                   type="text" 
                   className="sr-input" 
                   style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', fontWeight: 600, flex: '1 1 160px', minWidth: 0 }}
-                  placeholder="Field Name (key)"
+                  placeholder="Field ID / Key"
                   value={field.name || ''} 
                   onChange={(e) => handleFieldChange(idx, 'name', e.target.value)} 
                 />
@@ -115,6 +106,7 @@ export default function FormEditor({ component, onChange }) {
                     type="text" 
                     className="sr-input" 
                     style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', width: '100%' }}
+                    placeholder="Field Label / Display Name"
                     value={field.label || ''} 
                     onChange={(e) => handleFieldChange(idx, 'label', e.target.value)} 
                   />

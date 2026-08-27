@@ -102,16 +102,7 @@ export default function NodeGraphEditor({ component, onChange, onNotification })
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', minWidth: 0 }}>
       {/* Component Metadata */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', width: '100%' }}>
-        <div className="sr-form-group" style={{ minWidth: 0 }}>
-          <label className="sr-label">Component ID</label>
-          <input 
-            type="text" 
-            className="sr-input" 
-            value={component.id || ''} 
-            onChange={(e) => updateComponent({ id: e.target.value })} 
-          />
-        </div>
+      <div style={{ width: '100%' }}>
         <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Simulation Title</label>
           <input 
@@ -176,15 +167,6 @@ export default function NodeGraphEditor({ component, onChange, onNotification })
                         <Trash2 size={11} />
                       </button>
                     </div>
-
-                    <input 
-                      type="text" 
-                      className="sr-input" 
-                      style={{ padding: '0.15rem 0.3rem', fontSize: '0.7rem', width: '100%', minWidth: 0 }}
-                      value={node.id} 
-                      onChange={(e) => updateNode(node.id, { id: e.target.value })} 
-                      placeholder="node_id"
-                    />
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem', width: '100%' }}>
                       <input 

@@ -9,7 +9,8 @@ import {
   X, 
   Search,
   Plus,
-  ExternalLink
+  ExternalLink,
+  AlertTriangle
 } from 'lucide-react';
 
 import { storageService } from './StorageService';
@@ -200,6 +201,8 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
             <span className="sr-badge sr-badge-blue">Scenario Manager</span>
             <h2 className="sr-title">Browser Scenario Repository</h2>
             <p className="sr-subtitle">Manage built-in scenarios, custom JSON entries, imports, and exports.</p>
+            <br />
+            <p className="sr-subtitle"><AlertTriangle size={14} aria-hidden="true" /> Warning: Scenarios are only stored in your browser. Please avoid clearing browser / site data between editing sessions, and ensure to keep a copy of your scenarios on disk by exporting regularly.</p>
           </div>
 
           <div className="sr-flex-gap">

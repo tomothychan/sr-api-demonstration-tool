@@ -51,8 +51,8 @@ export default function DbTableEditor({ component, onChange }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', minWidth: 0 }}>
-      {/* Simulation Title at the top - Responsive Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem', width: '100%' }}>
+      {/* Simulation Title & Database Table Name */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem', width: '100%' }}>
         <div className="sr-form-group" style={{ minWidth: 0 }}>
           <label className="sr-label">Simulation Title (Label)</label>
           <input 
@@ -61,15 +61,6 @@ export default function DbTableEditor({ component, onChange }) {
             value={component.title || ''} 
             onChange={(e) => updateComponent({ title: e.target.value })} 
             placeholder="e.g. Candidates Table"
-          />
-        </div>
-        <div className="sr-form-group" style={{ minWidth: 0 }}>
-          <label className="sr-label">Component ID</label>
-          <input 
-            type="text" 
-            className="sr-input" 
-            value={component.id || ''} 
-            onChange={(e) => updateComponent({ id: e.target.value })} 
           />
         </div>
         <div className="sr-form-group" style={{ minWidth: 0 }}>
@@ -107,7 +98,7 @@ export default function DbTableEditor({ component, onChange }) {
                   backgroundColor: isFixed ? 'var(--sr-color-primary-light)' : 'var(--sr-color-bg-base)', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  justifyContent: 'space-between',
+                  justify: 'space-between',
                   flexWrap: 'wrap',
                   gap: '0.75rem',
                   minWidth: 0
