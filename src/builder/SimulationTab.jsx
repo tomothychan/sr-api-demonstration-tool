@@ -14,8 +14,8 @@ export default function SimulationTab({ onNavigateToBrowser }) {
 
   // Simulation execution state snapshots
   const [logs, setLogs] = useState([]);
-  const [dbRecords, setDbRecords] = useState([]);
-  const [activePacket, setActivePacket] = useState(null);
+  const [dbRecords, setDbRecords] = useState({}); // Keyed by dbTableId
+  const [activePackets, setActivePackets] = useState({}); // Keyed by nodeGraphId -> Array of packets
   const [nodeStates, setNodeStates] = useState({});
   const [edgeStates, setEdgeStates] = useState({});
   const [formData, setFormData] = useState({});
@@ -24,14 +24,12 @@ export default function SimulationTab({ onNavigateToBrowser }) {
   useEffect(() => {
     const loadSimulatingScenario = async () => {
       setIsLoading(true);
-      // Fallback check order: explicit simulating ID -> active editing ID
       const simId = await storageService.getActiveSimulatingScenarioId();
 
       if (simId) {
         const loaded = await storageService.loadScenario(simId);
         if (loaded) {
           setScenario(loaded);
-          // Initialize form state if scenario contains a form base component
           const formComp = loaded.baseComponents?.find((c) => c.type === 'form');
           if (formComp && Array.isArray(formComp.fields)) {
             const initialForm = {};
@@ -55,15 +53,18 @@ export default function SimulationTab({ onNavigateToBrowser }) {
   const totalSteps = scenario?.steps?.length || 0;
   const isCompleted = currentStep >= totalSteps && totalSteps > 0;
 
-  // 2. Step Execution Engine (Replays activities up to target step)
+  // 2. Step Execution Engine
   const executeToStep = (targetStepNum) => {
     if (!scenario || targetStepNum > totalSteps || targetStepNum < 0) return;
 
     let newLogs = [];
-    let newDbRecords = [];
-    let newActivePacket = null;
+    let newDbRecords = {};
+    let newActivePackets = {}; // Reset packets per step
     let nodeStateMap = {};
-    let edgeStateMap = {};
+    let edgeStateMap = {}; // Isolated to targetStepNum so edge highlights turn back to grey
+
+    const firstDbTable = scenario.baseComponents?.find((c) => c.type === 'dbTable');
+    const firstNodeGraph = scenario.baseComponents?.find((c) => c.type === 'nodeGraph');
 
     for (let s = 1; s <= targetStepNum; s++) {
       const stepObj = scenario.steps[s - 1];
@@ -74,32 +75,39 @@ export default function SimulationTab({ onNavigateToBrowser }) {
       stepObj.activities?.forEach((act) => {
         const cfg = act.config || {};
 
-        // 1. Node State Updates
+        // 1. Node State Updates (Sticky across steps)
         if (act.type === 'NodeUpdate' && cfg.nodeId) {
           nodeStateMap[cfg.nodeId] = cfg.state || 'active';
         }
 
-        // 2. Edge State / Line Color Updates
-        if (act.type === 'EdgeUpdate') {
+        // 2. Edge State Updates (Isolated to current step)
+        if (act.type === 'EdgeUpdate' && s === targetStepNum) {
           const edgeKey = `${cfg.fromNode}_${cfg.toNode}`;
           edgeStateMap[edgeKey] = { state: cfg.state || 'active', color: cfg.color };
         }
 
-        // 3. Packet Movement Animation (Only for active step)
+        // 3. Packet Movement Animation (Multi-Packet array support per graph for targetStepNum)
         if (act.type === 'PacketMovement' && s === targetStepNum) {
-          newActivePacket = {
+          const graphId = cfg.nodeGraphId || firstNodeGraph?.id || 'default_graph';
+          if (!newActivePackets[graphId]) {
+            newActivePackets[graphId] = [];
+          }
+          newActivePackets[graphId].push({
             fromNode: cfg.fromNode,
             toNode: cfg.toNode,
             label: cfg.label || 'Packet',
             direction: cfg.direction || 'forward',
             color: cfg.color || '#3b82f6',
-            key: `pkt-${s}-${Date.now()}`
-          };
+            key: `pkt-${s}-${act.id || Date.now()}-${Math.random()}`
+          });
         }
 
-        // 4. Database Mutations Snapshot
+        // 4. Database Mutations Snapshot (Keyed by Table ID)
         if (act.type === 'dbMutations' && Array.isArray(cfg.records)) {
-          newDbRecords = cfg.records;
+          const tableId = cfg.dbTableId || firstDbTable?.id;
+          if (tableId) {
+            newDbRecords[tableId] = cfg.records;
+          }
         }
 
         // 5. Inspector Panel Logs
@@ -126,7 +134,7 @@ export default function SimulationTab({ onNavigateToBrowser }) {
 
     setLogs(newLogs);
     setDbRecords(newDbRecords);
-    setActivePacket(newActivePacket);
+    setActivePackets(newActivePackets);
     setNodeStates(nodeStateMap);
     setEdgeStates(edgeStateMap);
     setCurrentStep(targetStepNum);
@@ -147,8 +155,8 @@ export default function SimulationTab({ onNavigateToBrowser }) {
   const handleReset = () => {
     setCurrentStep(0);
     setLogs([]);
-    setDbRecords([]);
-    setActivePacket(null);
+    setDbRecords({});
+    setActivePackets({});
     setNodeStates({});
     setEdgeStates({});
     setIsRunningAll(false);
@@ -177,7 +185,6 @@ export default function SimulationTab({ onNavigateToBrowser }) {
     }
   };
 
-  // Render Slate if no active scenario exists
   if (!isLoading && !scenario) {
     return (
       <NoScenarioSlate 
@@ -195,26 +202,10 @@ export default function SimulationTab({ onNavigateToBrowser }) {
     );
   }
 
-  // Base Component References
+  // Base Component Categories
   const formComp = scenario.baseComponents?.find((c) => c.type === 'form');
-  const nodeGraphComp = scenario.baseComponents?.find((c) => c.type === 'nodeGraph');
-  const dbTableComp = scenario.baseComponents?.find((c) => c.type === 'dbTable');
-
-  // Process Diagram Nodes & Edges
-  const processedNodes = (nodeGraphComp?.nodes || []).map((node) => ({
-    ...node,
-    stepStates: [nodeStates[node.id] || 'inactive']
-  }));
-
-  const processedEdges = (nodeGraphComp?.edges || []).map((edge) => {
-    const key = `${edge.from}_${edge.to}`;
-    const edgeInfo = edgeStates[key];
-    return {
-      ...edge,
-      stepStates: [edgeInfo?.state || 'inactive'],
-      color: edgeInfo?.color
-    };
-  });
+  const nodeGraphComps = scenario.baseComponents?.filter((c) => c.type === 'nodeGraph') || [];
+  const dbTableComps = scenario.baseComponents?.filter((c) => c.type === 'dbTable') || [];
 
   return (
     <div className="sr-main-split">
@@ -286,41 +277,64 @@ export default function SimulationTab({ onNavigateToBrowser }) {
             )}
           </div>
 
-          {/* Section 2: Node Data Flow Diagram */}
-          {nodeGraphComp && (
-            <div>
-              <div className="sr-subheading-group">
-                <Network size={18} style={{ color: '#3b82f6' }} />
-                <h3 className="sr-subheading-title">{nodeGraphComp.title || 'System Node Architecture'}</h3>
-              </div>
-              <NodeDataFlowDiagram 
-                nodes={processedNodes} 
-                edges={processedEdges}
-                activeStep={0} 
-                activePacket={activePacket} 
-              />
-            </div>
-          )}
+          {/* Section 2: Node Data Flow Diagrams */}
+          {nodeGraphComps.map((graph) => {
+            const processedNodes = (graph.nodes || []).map((node) => ({
+              ...node,
+              stepStates: [nodeStates[node.id] || 'inactive']
+            }));
 
-          {/* Section 3: Live Database Sync */}
-          {dbTableComp && (
-            <div style={{ paddingBottom: '2rem' }}>
-              <div className="sr-subheading-group">
-                <Database size={18} style={{ color: '#10b981' }} />
-                <h3 className="sr-subheading-title">{dbTableComp.title || 'Database Table Sync'}</h3>
+            const processedEdges = (graph.edges || []).map((edge) => {
+              const key = `${edge.from}_${edge.to}`;
+              const edgeInfo = edgeStates[key];
+              return {
+                ...edge,
+                stepStates: [edgeInfo?.state || 'inactive'],
+                color: edgeInfo?.color
+              };
+            });
+
+            const activeGraphPackets = activePackets[graph.id] || [];
+
+            return (
+              <div key={graph.id}>
+                <div className="sr-subheading-group">
+                  <Network size={18} style={{ color: '#3b82f6' }} />
+                  <h3 className="sr-subheading-title">{graph.title || 'System Node Architecture'}</h3>
+                </div>
+                <NodeDataFlowDiagram 
+                  nodes={processedNodes} 
+                  edges={processedEdges}
+                  activeStep={0} 
+                  activePacket={activeGraphPackets} 
+                />
               </div>
-              <LiveDatabaseTable 
-                tableName={dbTableComp.tableName || dbTableComp.title}
-                records={dbRecords} 
-                columns={dbTableComp.dbColumns?.filter((c) => !c.isFixed) || []} 
-              />
-            </div>
-          )}
+            );
+          })}
+
+          {/* Section 3: Live Database Tables */}
+          {dbTableComps.map((table) => {
+            const recordsForTable = dbRecords[table.id] || [];
+
+            return (
+              <div key={table.id} style={{ paddingBottom: '1rem' }}>
+                <div className="sr-subheading-group">
+                  <Database size={18} style={{ color: '#10b981' }} />
+                  <h3 className="sr-subheading-title">{table.title || 'Database Table Sync'}</h3>
+                </div>
+                <LiveDatabaseTable 
+                  tableName={table.tableName || table.title}
+                  records={recordsForTable} 
+                  columns={table.dbColumns?.filter((c) => !c.isFixed) || []} 
+                />
+              </div>
+            );
+          })}
 
         </div>
       </section>
 
-      {/* RIGHT PANEL: Inspector Logs Timeline */}
+      {/* RIGHT PANEL */}
       {scenario.inspectorPanelEnabled && (
         <InspectorPanel
           badgeText="API Inspector"

@@ -145,12 +145,17 @@ export default function NodeDataFlowDiagram({
     to: normalizedNodes[i + 1].id
   }));
 
-  const isPacketOnEdge = (edgeFrom, edgeTo) => {
-    if (!activePacket) return false;
-    const matchesForward = activePacket.fromNode === edgeFrom && activePacket.toNode === edgeTo;
-    const matchesReverse = activePacket.fromNode === edgeTo && activePacket.toNode === edgeFrom;
-    const matchesGeneric = activePacket.fromNode === edgeFrom && !activePacket.toNode;
-    return matchesForward || matchesReverse || matchesGeneric;
+  const packetsList = Array.isArray(activePacket) 
+    ? activePacket 
+    : (activePacket ? [activePacket] : []);
+
+  const getPacketsOnEdge = (edgeFrom, edgeTo) => {
+    return packetsList.filter((p) => {
+      const matchesForward = p.fromNode === edgeFrom && p.toNode === edgeTo;
+      const matchesReverse = p.fromNode === edgeTo && p.toNode === edgeFrom;
+      const matchesGeneric = p.fromNode === edgeFrom && !p.toNode;
+      return matchesForward || matchesReverse || matchesGeneric;
+    });
   };
 
   return (
@@ -210,7 +215,7 @@ export default function NodeDataFlowDiagram({
           width: '100%', 
           display: 'flex', 
           alignItems: 'stretch', 
-          justify: 'space-between', 
+          justifyContent: 'space-between', 
           minHeight: '260px', 
           gap: '0.5rem', 
           boxSizing: 'border-box' 
@@ -314,11 +319,13 @@ export default function NodeDataFlowDiagram({
                     if (edgeObj) {
                       const state = resolveState(edgeObj);
                       const style = STATE_STYLES[state] || STATE_STYLES.inactive;
-                      const hasPacket = isPacketOnEdge(leftNode.id, rightNode.id);
-                      const isReverse = hasPacket && (activePacket?.direction === 'reverse' || activePacket?.fromNode === rightNode.id);
+                      const packetsOnEdge = getPacketsOnEdge(leftNode.id, rightNode.id);
+                      const hasPacket = packetsOnEdge.length > 0;
+                      const firstPacket = packetsOnEdge[0];
+                      const isReverse = hasPacket && (firstPacket?.direction === 'reverse' || firstPacket?.fromNode === rightNode.id);
 
-                      const color = (hasPacket && activePacket?.color)
-                        ? activePacket.color
+                      const color = (hasPacket && firstPacket?.color)
+                        ? firstPacket.color
                         : (edgeObj.color || style.borderColor);
 
                       gapEdges.push({
@@ -332,7 +339,8 @@ export default function NodeDataFlowDiagram({
                         state,
                         color,
                         hasPacket,
-                        isReverse
+                        isReverse,
+                        packetsOnEdge
                       });
                     }
                   });
@@ -375,7 +383,7 @@ export default function NodeDataFlowDiagram({
                       />
                     )}
 
-                    {/* LEFT ARMS (from connected left nodes to spine) */}
+                    {/* LEFT ARMS */}
                     {leftArmIndices.map((leftIdx) => {
                       const y = getNodeY(leftIdx, colNodes.length);
                       const edgesForArm = gapEdges.filter((e) => e.leftIdx === leftIdx);
@@ -398,7 +406,7 @@ export default function NodeDataFlowDiagram({
                       );
                     })}
 
-                    {/* RIGHT ARMS (from spine to connected right nodes) WITH ARROWS */}
+                    {/* RIGHT ARMS */}
                     {rightArmIndices.map((rightIdx) => {
                       const y = getNodeY(rightIdx, nextColNodes.length);
                       const edgesForArm = gapEdges.filter((e) => e.rightIdx === rightIdx);
@@ -451,32 +459,34 @@ export default function NodeDataFlowDiagram({
                       );
                     })}
 
-                    {/* ACTIVE PACKETS */}
-                    {gapEdges.filter((e) => e.hasPacket).map((e, pIdx) => (
-                      <div 
-                        key={activePacket.key || `pkt-${colNum}-${pIdx}-${activeStep}`}
-                        style={{
-                          position: 'absolute', 
-                          top: `calc(${e.leftY}% - 12px)`, 
-                          left: e.isReverse ? '100%' : '0%',
-                          transform: 'translateX(-50%)', 
-                          backgroundColor: activePacket.color || '#3b82f6', 
-                          color: '#ffffff', 
-                          padding: '2px 7px',
-                          borderRadius: '10px', 
-                          fontSize: '0.65rem', 
-                          fontWeight: 700, 
-                          whiteSpace: 'nowrap',
-                          boxShadow: `0 0 8px ${activePacket.color || 'rgba(59, 130, 246, 0.4)'}`,
-                          animation: e.isReverse 
-                            ? 'movePacketReverse 1.2s ease-in-out forwards' 
-                            : 'movePacket 1.2s ease-in-out forwards',
-                          zIndex: 10
-                        }}
-                      >
-                        {activePacket.label}
-                      </div>
-                    ))}
+                    {/* ACTIVE PACKETS (Multi-Packet Stacking) */}
+                    {gapEdges.filter((e) => e.hasPacket).flatMap((e, pIdx) => {
+                      return e.packetsOnEdge.map((pkt, pktIdx) => (
+                        <div 
+                          key={pkt.key || `pkt-${colNum}-${pIdx}-${pktIdx}-${activeStep}`}
+                          style={{
+                            position: 'absolute', 
+                            top: `calc(${e.leftY}% - ${12 + pktIdx * 18}px)`, 
+                            left: pkt.direction === 'reverse' ? '100%' : '0%',
+                            transform: 'translateX(-50%)', 
+                            backgroundColor: pkt.color || '#3b82f6', 
+                            color: '#ffffff', 
+                            padding: '2px 7px',
+                            borderRadius: '10px', 
+                            fontSize: '0.65rem', 
+                            fontWeight: 700, 
+                            whiteSpace: 'nowrap',
+                            boxShadow: `0 0 8px ${pkt.color || 'rgba(59, 130, 246, 0.4)'}`,
+                            animation: pkt.direction === 'reverse' 
+                              ? 'movePacketReverse 1.2s ease-in-out forwards' 
+                              : 'movePacket 1.2s ease-in-out forwards',
+                            zIndex: 10 + pktIdx
+                          }}
+                        >
+                          {pkt.label}
+                        </div>
+                      ));
+                    })}
                   </div>
                 );
               })()}
