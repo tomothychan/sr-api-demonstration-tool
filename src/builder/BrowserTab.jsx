@@ -202,7 +202,7 @@ export default function BrowserTab({ onSimulateScenario, onEditScenario }) {
             <h2 className="sr-title">Browser Scenario Repository</h2>
             <p className="sr-subtitle">Manage built-in scenarios, custom JSON entries, imports, and exports.</p>
             <br />
-            <p className="sr-subtitle"><AlertTriangle size={14} aria-hidden="true" /> Warning: Scenarios are only stored in your browser. Please avoid clearing browser / site data between editing sessions, and ensure to keep a copy of your scenarios on disk by exporting regularly.</p>
+            <p className="sr-subtitle"><AlertTriangle size={14} aria-hidden="true" /> Warning: Custom scenarios are only stored in your browser. Please export and backup regularly.</p>
           </div>
 
           <div className="sr-flex-gap">

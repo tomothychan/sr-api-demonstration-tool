@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sun, Moon, RefreshCw, Upload, Download } from 'lucide-react'; 
+import React, { useState, useEffect } from 'react';
+import { Sun, Moon, RefreshCw, Upload, Download, Eye, EyeOff, Layers } from 'lucide-react'; 
 import sapLogo from '../assets/sap-logo.png';
 
 export default function ApiHeader({ 
@@ -11,17 +11,17 @@ export default function ApiHeader({
   goToShowcase,
   goToBuilder
 }) {
+  // LocalStorage state for White-Label / Branding Mode
+  const [isWhiteLabeled, setIsWhiteLabeled] = useState(() => {
+    return localStorage.getItem('sr-white-label') === 'true';
+  });
 
-  const isFunctionEmpty = (fn) => {
-    if (typeof fn !== 'function') return true;
-    
-    // Strip whitespace, arrow functions, and braces to check for executable code
-    const body = fn
-      .toString()
-      .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') // Remove comments
-      .replace(/\s/g, '');                     // Remove whitespace
+  useEffect(() => {
+    localStorage.setItem('sr-white-label', isWhiteLabeled);
+  }, [isWhiteLabeled]);
 
-    return body.includes('{}') || body.endsWith('=>{}');
+  const toggleWhiteLabel = () => {
+    setIsWhiteLabeled((prev) => !prev);
   };
 
   return (
@@ -29,14 +29,61 @@ export default function ApiHeader({
       {/* Top Bar: Title & Global Actions */}
       <div className="sr-header">
         <div className="sr-header-brand">
-          <img src={sapLogo} alt="SAP logo" className="sr-icon" style={{ objectFit: 'cover', width: '100px', height: '50px' }} />
+          {!isWhiteLabeled ? (
+            <img 
+              src={sapLogo} 
+              alt="SAP logo" 
+              className="sr-icon" 
+              style={{ objectFit: 'cover', width: '100px', height: '50px' }} 
+            />
+          ) : (
+            <div 
+              style={{ 
+                width: '40px', 
+                height: '40px', 
+                borderRadius: '8px', 
+                backgroundColor: 'var(--sr-color-primary-light, rgba(11, 102, 228, 0.15))', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: 'var(--sr-color-primary, #0b66e4)'
+              }}
+            >
+              <Layers size={22} />
+            </div>
+          )}
+
           <div>
-            <h1 className="sr-header-title">SmartRecruiters API Storyboard</h1>
-            <p className="sr-header-subtitle">Executive Demonstration Portal</p>
+            <h1 className="sr-header-title">
+              {isWhiteLabeled ? 'Enterprise API Storyboard' : 'SmartRecruiters API Storyboard'}
+            </h1>
+            <p className="sr-header-subtitle">
+              {isWhiteLabeled ? 'Integration Demonstration Portal' : 'Executive Demonstration Portal'}
+            </p>
           </div>
         </div>
 
         <div className="sr-header-actions">
+          {/* White-Label Toggle Button */}
+          <button 
+            onClick={toggleWhiteLabel} 
+            className="sr-btn sr-btn-secondary"
+            title="Toggle Branding / White-Label Mode"
+          >
+            {isWhiteLabeled ? (
+              <>
+                <Eye className="sr-icon-sm" />
+                <span>Show Branding</span>
+              </>
+            ) : (
+              <>
+                <EyeOff className="sr-icon-sm" />
+                <span>White-Label</span>
+              </>
+            )}
+          </button>
+
+          {/* Theme Switcher Button */}
           <button 
             onClick={toggleTheme} 
             className="sr-btn sr-btn-secondary"

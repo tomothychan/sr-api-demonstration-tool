@@ -9,5 +9,4 @@ Top Priority
 - update ppt
 - throughly test everything else
   - Packet spine coloring maybe? that logic is confusing and complicated and not worth my hassle..
-  - browser button problem
 - Toggle whether the SAP logo is shown or not.
