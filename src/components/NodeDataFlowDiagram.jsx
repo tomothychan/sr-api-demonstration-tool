@@ -52,6 +52,43 @@ const STATE_STYLES = {
   }
 };
 
+const getNodeY = (index, count) => {
+  if (count <= 1) return 50;
+  return ((index + 0.5) / count) * 100;
+};
+
+const getStatePriority = (state) => {
+  switch (state) {
+    case 'error': return 5;
+    case 'active': return 4;
+    case 'updated': return 3;
+    case 'completed': return 2;
+    default: return 1;
+  }
+};
+
+const getGroupColor = (edgesGroup) => {
+  if (!edgesGroup || edgesGroup.length === 0) return 'var(--sr-border)';
+
+  const activePacketEdge = edgesGroup.find((e) => e.hasPacket);
+  if (activePacketEdge && activePacketEdge.color) {
+    return activePacketEdge.color;
+  }
+
+  let bestColor = 'var(--sr-border)';
+  let maxPriority = 0;
+
+  edgesGroup.forEach((e) => {
+    const priority = getStatePriority(e.state);
+    if (priority > maxPriority) {
+      maxPriority = priority;
+      bestColor = e.color;
+    }
+  });
+
+  return bestColor;
+};
+
 export default function NodeDataFlowDiagram({ 
   nodes = [], 
   edges = null, 
@@ -130,7 +167,6 @@ export default function NodeDataFlowDiagram({
       }}
     >
       <style>{`
-        /* Default: Dark Theme Tokens */
         .sr-node-diagram {
           --sr-bg-base: var(--sr-color-bg-base, #0f172a);
           --sr-bg-card: var(--sr-color-bg-card, #1e1e24);
@@ -141,7 +177,6 @@ export default function NodeDataFlowDiagram({
           --sr-text-subtle: var(--sr-color-text-subtle, #64748b);
         }
 
-        /* Light Theme Tokens */
         .sr-node-diagram[data-theme="light"],
         [data-theme="light"] .sr-node-diagram,
         .light .sr-node-diagram,
@@ -175,7 +210,7 @@ export default function NodeDataFlowDiagram({
           width: '100%', 
           display: 'flex', 
           alignItems: 'stretch', 
-          justifyContent: 'space-between', 
+          justify: 'space-between', 
           minHeight: '260px', 
           gap: '0.5rem', 
           boxSizing: 'border-box' 
@@ -185,7 +220,6 @@ export default function NodeDataFlowDiagram({
           const colNum = colIdx + 1;
           const isLastCol = colNum === maxCol;
           const nextColNodes = columnMap[colIdx + 1] || [];
-          const connectorRows = colNodes.length > nextColNodes.length ? colNodes : nextColNodes;
 
           return (
             <React.Fragment key={`col-group-${colNum}`}>
@@ -267,160 +301,185 @@ export default function NodeDataFlowDiagram({
               </div>
 
               {/* DYNAMIC CONNECTOR BETWEEN COLUMNS */}
-              {!isLastCol && (
-                <div 
-                  style={{ 
-                    flex: '0 0 65px', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    position: 'relative' 
-                  }}
-                >
-                  {/* 1-to-N Spine */}
-                  {nextColNodes.length > 1 && colNodes.length === 1 && (
-                    <>
-                      <div 
-                        style={{
-                          position: 'absolute',
-                          left: '0px',
-                          width: '50%',
-                          top: '50%',
-                          height: '2px',
-                          transform: 'translateY(-50%)',
-                          backgroundColor: activeStep >= colNum ? '#3b82f6' : 'var(--sr-border)',
-                          transition: 'background-color 0.3s ease'
-                        }}
-                      />
-                      <div 
-                        style={{
-                          position: 'absolute',
-                          left: '50%',
-                          top: `${50 / nextColNodes.length}%`,
-                          bottom: `${50 / nextColNodes.length}%`,
-                          width: '2px',
-                          backgroundColor: activeStep >= colNum ? '#3b82f6' : 'var(--sr-border)',
-                          transition: 'background-color 0.3s ease'
-                        }}
-                      />
-                    </>
-                  )}
+              {!isLastCol && (() => {
+                const gapEdges = [];
 
-                  {/* N-to-1 Spine */}
-                  {colNodes.length > 1 && nextColNodes.length === 1 && (
-                    <>
+                colNodes.forEach((leftNode, leftIdx) => {
+                  nextColNodes.forEach((rightNode, rightIdx) => {
+                    const edgeObj = normalizedEdges.find(
+                      (e) => (e.from === leftNode.id && e.to === rightNode.id) ||
+                             (e.from === rightNode.id && e.to === leftNode.id)
+                    );
+
+                    if (edgeObj) {
+                      const state = resolveState(edgeObj);
+                      const style = STATE_STYLES[state] || STATE_STYLES.inactive;
+                      const hasPacket = isPacketOnEdge(leftNode.id, rightNode.id);
+                      const isReverse = hasPacket && (activePacket?.direction === 'reverse' || activePacket?.fromNode === rightNode.id);
+
+                      const color = (hasPacket && activePacket?.color)
+                        ? activePacket.color
+                        : (edgeObj.color || style.borderColor);
+
+                      gapEdges.push({
+                        edgeObj,
+                        leftNode,
+                        leftIdx,
+                        leftY: getNodeY(leftIdx, colNodes.length),
+                        rightNode,
+                        rightIdx,
+                        rightY: getNodeY(rightIdx, nextColNodes.length),
+                        state,
+                        color,
+                        hasPacket,
+                        isReverse
+                      });
+                    }
+                  });
+                });
+
+                const leftArmIndices = [...new Set(gapEdges.map((e) => e.leftIdx))];
+                const rightArmIndices = [...new Set(gapEdges.map((e) => e.rightIdx))];
+
+                const allY = [
+                  ...gapEdges.map((e) => e.leftY),
+                  ...gapEdges.map((e) => e.rightY)
+                ];
+
+                const hasEdges = gapEdges.length > 0;
+                const minY = hasEdges ? Math.min(...allY) : 0;
+                const maxY = hasEdges ? Math.max(...allY) : 0;
+                const spineColor = getGroupColor(gapEdges);
+
+                return (
+                  <div 
+                    style={{ 
+                      flex: '0 0 65px', 
+                      position: 'relative',
+                      minHeight: '100%'
+                    }}
+                  >
+                    {/* VERTICAL SPINE */}
+                    {hasEdges && maxY > minY && (
                       <div 
                         style={{
                           position: 'absolute',
                           left: '50%',
-                          top: `${50 / colNodes.length}%`,
-                          bottom: `${50 / colNodes.length}%`,
+                          top: `${minY}%`,
+                          height: `${maxY - minY}%`,
                           width: '2px',
-                          backgroundColor: activeStep >= colNum ? '#3b82f6' : 'var(--sr-border)',
+                          marginLeft: '-1px',
+                          backgroundColor: spineColor,
                           transition: 'background-color 0.3s ease'
                         }}
                       />
+                    )}
+
+                    {/* LEFT ARMS (from connected left nodes to spine) */}
+                    {leftArmIndices.map((leftIdx) => {
+                      const y = getNodeY(leftIdx, colNodes.length);
+                      const edgesForArm = gapEdges.filter((e) => e.leftIdx === leftIdx);
+                      const armColor = getGroupColor(edgesForArm);
+
+                      return (
+                        <div 
+                          key={`left-arm-${colNum}-${leftIdx}`}
+                          style={{
+                            position: 'absolute',
+                            left: '0px',
+                            width: '50%',
+                            top: `${y}%`,
+                            height: '2px',
+                            marginTop: '-1px',
+                            backgroundColor: armColor,
+                            transition: 'background-color 0.3s ease'
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* RIGHT ARMS (from spine to connected right nodes) WITH ARROWS */}
+                    {rightArmIndices.map((rightIdx) => {
+                      const y = getNodeY(rightIdx, nextColNodes.length);
+                      const edgesForArm = gapEdges.filter((e) => e.rightIdx === rightIdx);
+                      const armColor = getGroupColor(edgesForArm);
+                      const hasReverse = edgesForArm.some((e) => e.isReverse);
+
+                      return (
+                        <React.Fragment key={`right-arm-${colNum}-${rightIdx}`}>
+                          <div 
+                            style={{
+                              position: 'absolute',
+                              left: '50%',
+                              width: '50%',
+                              top: `${y}%`,
+                              height: '2px',
+                              marginTop: '-1px',
+                              backgroundColor: armColor,
+                              transition: 'background-color 0.3s ease'
+                            }}
+                          />
+
+                          {hasReverse ? (
+                            <ArrowLeft 
+                              size={14} 
+                              style={{ 
+                                position: 'absolute', 
+                                left: '50%', 
+                                top: `${y}%`, 
+                                transform: 'translate(-50%, -50%)', 
+                                color: armColor,
+                                zIndex: 2,
+                                transition: 'color 0.3s ease' 
+                              }} 
+                            />
+                          ) : (
+                            <ArrowRight 
+                              size={14} 
+                              style={{ 
+                                position: 'absolute', 
+                                right: '-1px', 
+                                top: `${y}%`, 
+                                transform: 'translateY(-50%)', 
+                                color: armColor,
+                                zIndex: 2,
+                                transition: 'color 0.3s ease' 
+                              }} 
+                            />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+
+                    {/* ACTIVE PACKETS */}
+                    {gapEdges.filter((e) => e.hasPacket).map((e, pIdx) => (
                       <div 
+                        key={activePacket.key || `pkt-${colNum}-${pIdx}-${activeStep}`}
                         style={{
-                          position: 'absolute',
-                          left: '50%',
-                          width: '50%',
-                          top: '50%',
-                          height: '2px',
-                          transform: 'translateY(-50%)',
-                          backgroundColor: activeStep >= colNum ? '#3b82f6' : 'var(--sr-border)',
-                          transition: 'background-color 0.3s ease'
-                        }}
-                      />
-                      <ArrowRight 
-                        size={16} 
-                        style={{ 
                           position: 'absolute', 
-                          right: '0px', 
-                          top: '50%', 
-                          transform: 'translateY(-50%)', 
-                          color: activeStep >= colNum ? '#3b82f6' : 'var(--sr-border)',
-                          zIndex: 1 
-                        }} 
-                      />
-                    </>
-                  )}
-
-                  {/* EDGE LINES AND ARROWS */}
-                  {connectorRows.map((_, rowIdx) => {
-                    const edgeFrom = colNodes.length === 1 ? colNodes[0].id : (colNodes[rowIdx]?.id || colNodes[0].id);
-                    const edgeTo = nextColNodes.length === 1 ? nextColNodes[0].id : (nextColNodes[rowIdx]?.id || nextColNodes[0].id);
-
-                    const edgeObj = normalizedEdges.find((e) => (e.from === edgeFrom && e.to === edgeTo) || (e.from === edgeTo && e.to === edgeFrom)) || { from: edgeFrom, to: edgeTo };
-                    const edgeState = resolveState(edgeObj);
-                    const edgeStyle = STATE_STYLES[edgeState] || STATE_STYLES.inactive;
-
-                    const hasActivePacket = isPacketOnEdge(edgeFrom, edgeTo);
-                    const isReversePacket = hasActivePacket && (activePacket?.direction === 'reverse' || activePacket?.fromNode === edgeTo);
-
-                    const isOneToN = colNodes.length === 1 && nextColNodes.length > 1;
-                    const isNToOne = colNodes.length > 1 && nextColNodes.length === 1;
-
-                    return (
-                      <div 
-                        key={`edge-${edgeFrom}-${edgeTo}-${rowIdx}`} 
-                        style={{ 
-                          display: 'flex', 
-                          flexDirection: 'row', 
-                          alignItems: 'center', 
-                          width: (isOneToN || isNToOne) ? '50%' : '100%',
-                          marginLeft: isOneToN ? 'auto' : '0',
-                          flex: '1 1 0',
-                          position: 'relative'
+                          top: `calc(${e.leftY}% - 12px)`, 
+                          left: e.isReverse ? '100%' : '0%',
+                          transform: 'translateX(-50%)', 
+                          backgroundColor: activePacket.color || '#3b82f6', 
+                          color: '#ffffff', 
+                          padding: '2px 7px',
+                          borderRadius: '10px', 
+                          fontSize: '0.65rem', 
+                          fontWeight: 700, 
+                          whiteSpace: 'nowrap',
+                          boxShadow: `0 0 8px ${activePacket.color || 'rgba(59, 130, 246, 0.4)'}`,
+                          animation: e.isReverse 
+                            ? 'movePacketReverse 1.2s ease-in-out forwards' 
+                            : 'movePacket 1.2s ease-in-out forwards',
+                          zIndex: 10
                         }}
                       >
-                        {isReversePacket && (
-                          <ArrowLeft size={16} style={{ color: activePacket?.color || '#3b82f6', marginRight: '-4px', zIndex: 1, flexShrink: 0 }} />
-                        )}
-
-                        <div 
-                          style={{ 
-                            flex: 1,
-                            minWidth: 0,
-                            height: '2px', 
-                            backgroundColor: hasActivePacket ? (activePacket?.color || '#3b82f6') : edgeStyle.borderColor, 
-                            position: 'relative', 
-                            transition: 'background-color 0.3s ease' 
-                          }}
-                        >
-                          {hasActivePacket && (
-                            <div 
-                              key={activePacket.key || `${activePacket.label}-${activeStep}`}
-                              style={{
-                                position: 'absolute', 
-                                top: '-14px', 
-                                left: isReversePacket ? '100%' : '0%',
-                                transform: 'translateX(-50%)', 
-                                backgroundColor: activePacket.color || '#3b82f6', 
-                                color: '#ffffff', 
-                                padding: '3px 8px',
-                                borderRadius: '12px', 
-                                fontSize: '0.68rem', 
-                                fontWeight: 700, 
-                                whiteSpace: 'nowrap',
-                                boxShadow: `0 0 10px ${activePacket.color || 'rgba(59, 130, 246, 0.4)'}`,
-                                animation: isReversePacket ? 'movePacketReverse 1.2s ease-in-out forwards' : 'movePacket 1.2s ease-in-out forwards'
-                              }}
-                            >
-                              {activePacket.label}
-                            </div>
-                          )}
-                        </div>
-
-                        {!isReversePacket && !isNToOne && (
-                          <ArrowRight size={16} style={{ color: hasActivePacket ? (activePacket?.color || '#3b82f6') : edgeStyle.borderColor, marginLeft: '-4px', zIndex: 1, flexShrink: 0 }} />
-                        )}
+                        {activePacket.label}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    ))}
+                  </div>
+                );
+              })()}
             </React.Fragment>
           );
         })}

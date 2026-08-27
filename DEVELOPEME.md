@@ -8,5 +8,13 @@ Bugs
 Top Priority
 - update ppt
 - throughly test everything else
-  - Node edge graph 2 -> 3 nodes makes things a bit weird
+  - Packet spine coloring maybe? that logic is confusing and complicated and not worth my hassle..
 - make a template json file
+
+ok I want to show off the capability of this editor. come up with a scenario
+- uses two node graph of varying complexity, one with 3 col one with 5, the 3 col one must have atleast 6 nodes
+- atleast 10 steps, more if appropriate
+- use a table and a form as usual
+- use every other feature you can think of.
+
+generate this in json ofc.
